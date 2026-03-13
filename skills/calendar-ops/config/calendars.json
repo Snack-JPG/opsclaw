@@ -1,0 +1,21 @@
+{
+  "timezone": "Europe/London",
+  "defaults": {
+    "briefingWindowDays": 1,
+    "lookAheadHours": 2,
+    "prepLeadMinutes": 30,
+    "minimumBufferMinutes": 10,
+    "availabilityGranularityMinutes": 15
+  },
+  "calendars": [
+    {
+      "id": "primary",
+      "label": "Primary",
+      "enabled": true,
+      "monitor": true,
+      "includeInAvailability": true,
+      "includeInConflicts": true,
+      "color": "#2563eb"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "internalDomains": [
+    "opsclaw.local",
+    "yourcompany.com"
+  ],
+  "defaults": {
+    "enabled": true,
+    "leadMinutes": 30,
+    "minDurationMinutes": 20,
+    "requirePrepForExternalAttendees": true,
+    "requirePrepForUnknownAttendees": false,
+    "writeToDirectory": "workspace/prep",
+    "includeRecentInteractionLimit": 5
+  },
+  "rules": [
+    {
+      "name": "Client meetings",
+      "enabled": true,
+      "match": {
+        "titleKeywords": [
+          "client",
+          "customer",
+          "account review",
+          "renewal",
+          "sales call"
+        ]
+      },
+      "requirePrep": true,
+      "priority": "high"
+    },
+    {
+      "name": "Board and leadership",
+      "enabled": true,
+      "match": {
+        "attendeeEmails": [
+          "board@example.com",
+          "ceo@example.com"
+        ]
+      },
+      "requirePrep": true,
+      "priority": "high"
+    },
+    {
+      "name": "Internal standups",
+      "enabled": true,
+      "match": {
+        "titleKeywords": [
+          "standup",
+          "daily sync",
+          "internal catchup"
+        ]
+      },
+      "requirePrep": false,
+      "priority": "low"
+    }
+  ]
+}
