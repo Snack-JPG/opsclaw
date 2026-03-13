@@ -35,7 +35,8 @@ It is designed for operators who need one agent to stay on top of inboxes, calen
                +---------------+    +---------------+     +---------------+    +---------------+
                | Email Intel   |    | Calendar Ops  |     | CRM Sync      |    | Task Tracker  |
                | Gmail triage  |    | GCal briefs   |     | HubSpot /     |    | Linear /      |
-               | Draft queues  |    | Meeting prep  |     | Pipedrive     |    | Notion /      |
+               | Draft queues  |    | Meeting prep  |     | Pipedrive /   |    | Notion /      |
+               |               |    |               |     | GoHighLevel   |    |               |
                +-------+-------+    +-------+-------+     +-------+-------+    | Asana         |
                        |                    |                     |            +-------+-------+
                        +--------------------+---------------------+--------------------+
@@ -69,7 +70,7 @@ It is designed for operators who need one agent to stay on top of inboxes, calen
 - `email-intel`: Gmail inbox fetch via `gws`, inbox classification, VIP escalation, brief generation, draft reply suggestions.
 - `calendar-ops`: Google Calendar reads and writes via `gws`, daily schedule briefings, conflict checks, availability checks, meeting prep generation.
 - `drive-docs`: Google Drive and Google Docs search, upload/download, creation, and update workflows via `gws`.
-- `crm-sync`: HubSpot or Pipedrive contact/deal lookup, notes, follow-up prioritisation, onboarding flows, health scoring.
+- `crm-sync`: HubSpot, Pipedrive, or GoHighLevel contact/deal lookup, notes, follow-up prioritisation, onboarding flows, health scoring.
 - `task-tracker`: Linear, Notion, or Asana task sync, natural-language task parsing, standups, weekly reports.
 - `ops-reporting`: unified daily brief, weekly review, KPI tracking, anomaly detection, channel-specific formatting.
 
@@ -108,6 +109,9 @@ OPSCLAW_GATEWAY_TOKEN=replace-me
 OPSCLAW_HOOKS_TOKEN=replace-me
 HUBSPOT_ACCESS_TOKEN=replace-me
 PIPEDRIVE_API_TOKEN=replace-me
+GOHIGHLEVEL_ACCESS_TOKEN=replace-me
+GOHIGHLEVEL_CLIENT_ID=replace-me
+GOHIGHLEVEL_CLIENT_SECRET=replace-me
 LINEAR_API_KEY=replace-me
 NOTION_API_TOKEN=replace-me
 ASANA_ACCESS_TOKEN=replace-me
@@ -160,7 +164,7 @@ Add polished captures here before publishing a public showcase. Recommended set:
 | Automation scripts | Bash, Python 3 |
 | Messaging and hooks | OpenClaw Gateway, webhooks, Gmail / Calendar / Drive / Docs via `gws` |
 | Google Workspace | Google Workspace CLI (`gws`) for Gmail, Calendar, Drive, Docs |
-| CRM | HubSpot API, Pipedrive API |
+| CRM | HubSpot API, Pipedrive API, GoHighLevel API |
 | Task systems | Linear GraphQL API, Notion API, Asana API |
 | Reporting | Markdown, plain text, Slack blocks, Telegram-friendly output |
 | Deployment | macOS or Ubuntu, Docker Compose, optional Tailscale |
@@ -174,6 +178,7 @@ Add polished captures here before publishing a public showcase. Recommended set:
 | Google Drive / Docs via `gws` | File search, upload/download, doc creation and updates | Implemented |
 | HubSpot | Contact and deal lookup, notes, follow-up workflows | Implemented |
 | Pipedrive | CRM lookup, notes, onboarding, follow-up workflows | Implemented |
+| GoHighLevel | Contacts, opportunities, conversations, calendars, workflows, webhook setup helper | Implemented |
 | Linear | Issue and task operations | Implemented |
 | Notion | Task database operations | Implemented |
 | Asana | Task creation and reporting | Implemented |

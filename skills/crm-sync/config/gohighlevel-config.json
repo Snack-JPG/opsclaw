@@ -1,0 +1,49 @@
+{
+  "gohighlevel": {
+    "baseUrl": "https://services.leadconnectorhq.com",
+    "version": "2021-07-28",
+    "defaultLocationId": "replace-with-location-id",
+    "defaultPipelineId": "replace-with-pipeline-id",
+    "defaultCalendarId": "replace-with-calendar-id",
+    "auth": {
+      "accessTokenEnv": "GOHIGHLEVEL_ACCESS_TOKEN",
+      "oauth2": {
+        "clientIdEnv": "GOHIGHLEVEL_CLIENT_ID",
+        "clientSecretEnv": "GOHIGHLEVEL_CLIENT_SECRET",
+        "redirectUri": "https://your-app.example.com/oauth/gohighlevel/callback",
+        "authorizeUrl": "https://marketplace.gohighlevel.com/oauth/chooselocation",
+        "tokenUrl": "https://services.leadconnectorhq.com/oauth/token",
+        "scopes": [
+          "contacts.readonly",
+          "contacts.write",
+          "opportunities.readonly",
+          "opportunities.write",
+          "conversations.readonly",
+          "conversations.write",
+          "calendars.readonly",
+          "calendars.write",
+          "workflows.readonly",
+          "workflows.write"
+        ],
+        "tokenStore": "gohighlevel-oauth-tokens.json"
+      }
+    },
+    "webhooks": {
+      "targetUrl": "https://your-app.example.com/webhooks/gohighlevel",
+      "events": [
+        "ContactCreate",
+        "ContactUpdate",
+        "OpportunityCreate",
+        "OpportunityUpdate",
+        "AppointmentCreate",
+        "ConversationCreate"
+      ]
+    }
+  },
+  "retry": {
+    "maxRetries": 3,
+    "baseDelaySeconds": 1.0,
+    "maxDelaySeconds": 20.0,
+    "jitterSeconds": 0.5
+  }
+}

@@ -1,6 +1,6 @@
 ---
 name: crm_sync
-description: CRM integration for OpsClaw: look up contacts and deals, auto-log email and call interactions, score client health, generate prioritized follow-ups, and automate onboarding through HubSpot or Pipedrive.
+description: CRM integration for OpsClaw: look up contacts and deals, auto-log email and call interactions, score client health, generate prioritized follow-ups, and automate onboarding through HubSpot, Pipedrive, or GoHighLevel.
 ---
 
 # CRM Sync Skill
@@ -17,12 +17,13 @@ Use this skill whenever the user asks to look up a client, inspect or update pip
 4. Use the bundled scripts for deterministic work:
    - `scripts/hubspot-client.py`
    - `scripts/pipedrive-client.py`
+   - `scripts/gohighlevel-client.py`
    - `scripts/health-scorer.py`
    - `scripts/onboarding.py`
    - `scripts/follow_ups.py`
 
 ## Triggers
-- `Webhook`: new deal created, deal stage changed, contact created, or CRM workflow event received from HubSpot or Pipedrive.
+- `Webhook`: new deal created, deal stage changed, contact created, or CRM workflow event received from HubSpot, Pipedrive, or GoHighLevel.
 - `Cron`: daily follow-up review at 9:00 AM local timezone.
 - `Cron`: weekly client health review every Monday at 8:00 AM local timezone.
 - `Heartbeat`: overdue follow-up scan, stale pipeline activity check, and CRM error/rate-limit review.
@@ -121,6 +122,7 @@ When onboarding is triggered manually or from a CRM webhook:
 
 ## Reliability and Observability
 - Use the provider-specific scripts for all CRM API access.
+- For GoHighLevel webhook subscriptions, use the Marketplace app settings. The local helper returns the subscription payload because the referenced public docs do not expose a REST registration/list endpoint.
 - Apply bounded retry with exponential backoff for transient network errors and HTTP `429` / `5xx` responses.
 - Return normalized JSON so downstream steps stay provider-agnostic.
 - Capture exhausted failures in `workspace/memory/dead-letters/YYYY-MM-DD.json`.
@@ -129,12 +131,13 @@ When onboarding is triggered manually or from a CRM webhook:
 ## Setup and References
 - Human setup instructions live in `README.md`.
 - Connection details and provider selection live in `config/crm-config.json`.
+- GoHighLevel-specific auth defaults and webhook templates live in `config/gohighlevel-config.json`.
 - Health thresholds and factor rules live in `config/health-rules.json`.
 - Template-specific onboarding flows live in `config/onboarding-templates/`.
 
 ## Acceptance Standard
 This skill is considered healthy when:
-- contact lookup returns the correct HubSpot or Pipedrive records
+- contact lookup returns the correct HubSpot, Pipedrive, or GoHighLevel records
 - email or call interactions are logged to the contact and active deal timelines
 - health scores calculate correctly with factor-level breakdown for test clients
 - overdue follow-ups appear in the daily queue

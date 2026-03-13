@@ -47,7 +47,12 @@ def render_template(text: str, context: dict[str, Any]) -> str:
 
 def load_provider_module(provider: str) -> Any:
     """Load the requested CRM provider module by file path."""
-    script_name = "hubspot-client.py" if provider == "hubspot" else "pipedrive-client.py"
+    script_map = {
+        "hubspot": "hubspot-client.py",
+        "pipedrive": "pipedrive-client.py",
+        "gohighlevel": "gohighlevel-client.py",
+    }
+    script_name = script_map[provider]
     module_name = f"opsclaw_{provider}_client"
     module_path = SCRIPT_DIR / script_name
     spec = importlib.util.spec_from_file_location(module_name, module_path)
@@ -63,7 +68,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--template", type=Path, required=True, help="Path to an onboarding template JSON file.")
     parser.add_argument("--client", type=Path, help="Path to a client JSON payload. Reads stdin if omitted.")
-    parser.add_argument("--provider", choices=["hubspot", "pipedrive"], required=True, help="CRM provider.")
+    parser.add_argument("--provider", choices=["hubspot", "pipedrive", "gohighlevel"], required=True, help="CRM provider.")
     parser.add_argument("--config", type=Path, help="Path to crm-config.json. Required with --create-records.")
     parser.add_argument("--create-records", action="store_true", help="Create CRM records using provider credentials.")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output.")
@@ -166,7 +171,12 @@ def create_records(plan: dict[str, Any], provider: str, config_path: Path) -> di
     """Create CRM records using the provider-specific client."""
     module = load_provider_module(provider)
     settings = module.load_settings(config_path)
-    client = module.HubSpotClient(settings) if provider == "hubspot" else module.PipedriveClient(settings)
+    if provider == "hubspot":
+        client = module.HubSpotClient(settings)
+    elif provider == "pipedrive":
+        client = module.PipedriveClient(settings)
+    else:
+        client = module.GoHighLevelClient(settings)
 
     company_payload = plan["crmPlan"]["company"]
     contact_payload = plan["crmPlan"]["contact"]
@@ -191,7 +201,7 @@ def create_records(plan: dict[str, Any], provider: str, config_path: Path) -> di
                 "amount": deal_payload.get("value"),
             }
         )
-    else:
+    elif provider == "pipedrive":
         created_company = client.create_company({"name": company_payload["name"], "address": company_payload.get("website")})
         created_contact = client.create_contact(
             {
@@ -208,6 +218,36 @@ def create_records(plan: dict[str, Any], provider: str, config_path: Path) -> di
                 "value": deal_payload.get("value"),
                 "org_id": int(created_company["id"]),
                 "person_id": int(created_contact["id"]),
+            }
+        )
+    else:
+        first_name, last_name = module.split_name(contact_payload.get("name"))
+        created_contact = client.create_contact(
+            {
+                "locationId": settings.default_location_id,
+                "firstName": first_name,
+                "lastName": last_name,
+                "email": contact_payload.get("email"),
+                "phone": contact_payload.get("phone"),
+                "companyName": company_payload["name"],
+                "name": contact_payload.get("name"),
+            }
+        )
+        created_company = {
+            "provider": "gohighlevel",
+            "skipped": True,
+            "reason": "GoHighLevel support in OpsClaw uses contacts and opportunities rather than a separate company record.",
+            "name": company_payload["name"],
+        }
+        created_deal = client.create_opportunity(
+            {
+                "locationId": settings.default_location_id,
+                "contactId": created_contact["id"],
+                "name": deal_payload["title"],
+                "pipelineId": deal_payload["pipeline"] or settings.default_pipeline_id,
+                "pipelineStageId": deal_payload["stage"],
+                "monetaryValue": deal_payload.get("value"),
+                "status": "open",
             }
         )
 

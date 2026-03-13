@@ -1,42 +1,54 @@
 # CRM Sync Skill
 
-This skill adds CRM-backed client lookup, interaction logging, health scoring, follow-up generation, and onboarding automation to OpsClaw using either HubSpot or Pipedrive.
+This skill adds CRM-backed client lookup, interaction logging, health scoring, follow-up generation, and onboarding automation to OpsClaw using HubSpot, Pipedrive, or GoHighLevel.
 
 ## Files
 - `SKILL.md`: agent operating instructions
 - `scripts/hubspot-client.py`: HubSpot CRM API wrapper and CLI
 - `scripts/pipedrive-client.py`: Pipedrive API wrapper and CLI
+- `scripts/gohighlevel-client.py`: GoHighLevel CRM API wrapper, OAuth helper, and CLI
 - `scripts/health-scorer.py`: deterministic client health scoring engine
 - `scripts/onboarding.py`: onboarding checklist and CRM upsert orchestrator
 - `scripts/follow_ups.py`: follow-up prioritisation engine
 - `config/crm-config.json`: provider selection and connection template
+- `config/gohighlevel-config.json`: GoHighLevel auth, webhook, and default object template
 - `config/health-rules.json`: factor thresholds and score weights
 - `config/onboarding-templates/*.json`: onboarding checklist templates
 
 ## Prerequisites
-- A HubSpot or Pipedrive account with API access
+- A HubSpot, Pipedrive, or GoHighLevel account with API access
 - `python3` installed locally
 - For HubSpot:
   - a private app token with CRM object read/write scopes
 - For Pipedrive:
   - an API token and your company domain, for example `acme`
+- For GoHighLevel:
+  - either a marketplace OAuth app or a private integration token with CRM, conversations, calendars, and workflows scopes
 
 These scripts use the Python standard library only, so no extra package install is required.
 
 ## Quick Start
-1. Copy and edit the CRM config template:
+1. Copy and edit the config template for your CRM:
 
 ```bash
 $EDITOR skills/crm-sync/config/crm-config.json
 ```
 
+For GoHighLevel, use:
+
+```bash
+$EDITOR skills/crm-sync/config/gohighlevel-config.json
+```
+
 2. Set the provider:
    - HubSpot: `"provider": "hubspot"`
    - Pipedrive: `"provider": "pipedrive"`
+   - GoHighLevel: use `skills/crm-sync/config/gohighlevel-config.json`
 
 3. Add credentials:
    - HubSpot: set `hubspot.baseUrl` and export `HUBSPOT_ACCESS_TOKEN`
    - Pipedrive: set `pipedrive.baseUrl` and export `PIPEDRIVE_API_TOKEN`
+   - GoHighLevel: export `GOHIGHLEVEL_ACCESS_TOKEN` or complete the OAuth setup fields and token store in `gohighlevel-config.json`
 
 4. Test connectivity.
 
@@ -52,6 +64,13 @@ python3 skills/crm-sync/scripts/hubspot-client.py search-contacts \
 python3 skills/crm-sync/scripts/pipedrive-client.py search-contacts \
   --config skills/crm-sync/config/crm-config.json \
   --query "Acme"
+```
+
+### GoHighLevel Test
+```bash
+python3 skills/crm-sync/scripts/gohighlevel-client.py list-contacts \
+  --config skills/crm-sync/config/gohighlevel-config.json \
+  --limit 5
 ```
 
 ## HubSpot Setup
@@ -120,6 +139,74 @@ python3 skills/crm-sync/scripts/pipedrive-client.py add-note \
   --deal-id 456
 ```
 
+## GoHighLevel Setup
+1. In GoHighLevel Marketplace, create or configure your app and enable the scopes you need for contacts, opportunities, conversations, calendars, workflows, and webhooks.
+2. For a private integration, export an access token:
+
+```bash
+export GOHIGHLEVEL_ACCESS_TOKEN="..."
+```
+
+3. For OAuth, also export client credentials:
+
+```bash
+export GOHIGHLEVEL_CLIENT_ID="..."
+export GOHIGHLEVEL_CLIENT_SECRET="..."
+```
+
+4. Edit the HighLevel config template:
+
+```json
+{
+  "gohighlevel": {
+    "baseUrl": "https://services.leadconnectorhq.com",
+    "version": "2021-07-28",
+    "defaultLocationId": "your-location-id",
+    "defaultPipelineId": "your-pipeline-id",
+    "defaultCalendarId": "your-calendar-id"
+  }
+}
+```
+
+5. If you are using OAuth, generate the install URL and exchange the returned code:
+
+```bash
+python3 skills/crm-sync/scripts/gohighlevel-client.py oauth-authorize-url \
+  --config skills/crm-sync/config/gohighlevel-config.json \
+  --state opsclaw-ghl
+```
+
+```bash
+python3 skills/crm-sync/scripts/gohighlevel-client.py oauth-exchange-code \
+  --config skills/crm-sync/config/gohighlevel-config.json \
+  --code "<oauth-code>"
+```
+
+### Common GoHighLevel Commands
+```bash
+python3 skills/crm-sync/scripts/gohighlevel-client.py search-contacts \
+  --config skills/crm-sync/config/gohighlevel-config.json \
+  --input /tmp/contact-search.json
+```
+
+```bash
+python3 skills/crm-sync/scripts/gohighlevel-client.py list-opportunities \
+  --config skills/crm-sync/config/gohighlevel-config.json \
+  --pipeline-id "pipeline_123" \
+  --limit 25
+```
+
+```bash
+python3 skills/crm-sync/scripts/gohighlevel-client.py send-message \
+  --config skills/crm-sync/config/gohighlevel-config.json \
+  --contact-id "contact_123" \
+  --channel sms \
+  --body "Checking in on next steps for your onboarding."
+```
+
+Webhook note:
+- The official GoHighLevel Marketplace docs describe webhook configuration in the app dashboard. `register-webhook` and `list-webhooks` in this repo generate and inspect the local subscription payload, but they do not call an undocumented REST endpoint.
+
 ## Health Scoring
 Score one or more clients from a metrics payload:
 
@@ -156,7 +243,7 @@ Run onboarding with a selected template:
 python3 skills/crm-sync/scripts/onboarding.py \
   --template skills/crm-sync/config/onboarding-templates/consulting.json \
   --client /tmp/new-client.json \
-  --provider hubspot
+  --provider gohighlevel
 ```
 
 The output is a structured checklist and CRM action plan. Use `--create-records` with provider credentials if you want the script to upsert CRM objects.
