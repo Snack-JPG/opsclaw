@@ -6,12 +6,11 @@ import random
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import ParamSpec, TypeVar
+from typing import TypeVar, Any
 
 from .logger import get_logger
 
 
-P = ParamSpec("P")
 T = TypeVar("T")
 
 
@@ -28,11 +27,11 @@ class RetryConfig:
 
 
 def retry_call(
-    fn: Callable[P, T],
-    *args: P.args,
+    fn: Callable[..., T],
+    *args: Any,
     config: RetryConfig | None = None,
     logger_name: str = "opsclaw.retry",
-    **kwargs: P.kwargs,
+    **kwargs: Any,
 ) -> T:
     """Execute ``fn`` with bounded exponential backoff."""
     cfg = config or RetryConfig()
@@ -68,3 +67,6 @@ def retry_call(
                 },
             )
             time.sleep(delay)
+
+    # This should never be reached due to the raise in the loop
+    raise RuntimeError("Retry loop exited unexpectedly")

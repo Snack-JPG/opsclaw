@@ -151,6 +151,7 @@ def graphql_request(settings: LinearSettings, query: str, variables: dict[str, A
                 extra={"event": {"attempt": attempt + 1, "delaySeconds": round(delay, 2), "error": str(exc.reason)}},
             )
             time.sleep(delay)
+            continue
     raise LinearError("Linear retry loop exhausted unexpectedly.")
 
 

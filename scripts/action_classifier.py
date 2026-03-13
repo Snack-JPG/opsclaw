@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum
 
 
-class ActionClass(StrEnum):
+class ActionClass(str, Enum):
     INTERNAL_LOG = "internal_log"
     INTERNAL_BRIEF = "internal_brief"
     INTERNAL_QUERY = "internal_query"
@@ -20,7 +20,7 @@ class ActionClass(StrEnum):
     FINANCIAL = "financial"
 
 
-class ApprovalDecision(StrEnum):
+class ApprovalDecision(str, Enum):
     EXECUTE = "execute"
     QUEUE_FOR_APPROVAL = "queue_for_approval"
     BLOCK = "block"
