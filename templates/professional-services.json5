@@ -1,0 +1,55 @@
+{
+  profile: "professional-services",
+  description: "Template for accountancy, legal, advisory, or similar firms where confidentiality and approval controls matter more than speed of automation.",
+  deployment: {
+    mode: "vps",
+    timezone: "Europe/London",
+    ownerChannel: "email",
+  },
+  channels: {
+    email: { enabled: true },
+    telegram: { enabled: false },
+  },
+  agents: {
+    defaults: {
+      heartbeat: {
+        every: "30m",
+        target: "last",
+        activeHours: { start: "07:00", end: "20:00" },
+      },
+      sandbox: { mode: "all", scope: "agent" },
+    },
+  },
+  hooks: {
+    enabled: true,
+    tokenEnv: "OPSCLAW_HOOKS_TOKEN",
+    path: "/hooks",
+    presets: ["gmail"],
+  },
+  skills: {
+    entries: {
+      "email-intel": { enabled: true },
+      "calendar-ops": { enabled: true },
+      "crm-sync": { enabled: true },
+      "task-tracker": { enabled: true },
+      "ops-reporting": { enabled: true },
+    },
+  },
+  approvals: {
+    externalEmail: "explicit",
+    externalMessage: "explicit",
+    calendarWrite: "explicit",
+    crmDealChange: "explicit",
+  },
+  compliance: {
+    redactTaxIds: true,
+    redactNationalIds: true,
+    logApprovalChains: true,
+  },
+  briefing: {
+    morning: "07:45",
+    endOfDay: "17:45",
+    weekly: "Monday 08:15",
+    style: "detailed",
+  },
+}

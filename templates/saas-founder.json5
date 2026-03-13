@@ -1,0 +1,51 @@
+{
+  profile: "saas-founder",
+  description: "Template for a founder-led SaaS company with investor, customer, and product communication mixed into one operating cadence.",
+  deployment: {
+    mode: "docker-compose",
+    timezone: "America/Los_Angeles",
+    ownerChannel: "slack",
+  },
+  channels: {
+    slack: { enabled: true },
+    email: { enabled: true },
+  },
+  agents: {
+    defaults: {
+      heartbeat: {
+        every: "30m",
+        target: "last",
+        activeHours: { start: "06:00", end: "22:30" },
+      },
+      sandbox: { mode: "all", scope: "agent" },
+    },
+  },
+  hooks: {
+    enabled: true,
+    tokenEnv: "OPSCLAW_HOOKS_TOKEN",
+    path: "/hooks",
+    presets: ["gmail"],
+  },
+  skills: {
+    entries: {
+      "email-intel": { enabled: true },
+      "calendar-ops": { enabled: true },
+      "crm-sync": { enabled: true },
+      "task-tracker": { enabled: true },
+      "ops-reporting": { enabled: true },
+    },
+  },
+  approvals: {
+    externalEmail: "explicit",
+    externalMessage: "explicit",
+    calendarWrite: "explicit",
+    crmDealChange: "explicit",
+  },
+  briefing: {
+    morning: "07:30",
+    endOfDay: "18:30",
+    weekly: "Monday 08:00",
+    style: "concise",
+  },
+  escalationKeywords: ["churn", "security", "outage", "renewal", "board", "investor"],
+}

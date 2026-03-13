@@ -1,0 +1,54 @@
+{
+  profile: "agency",
+  description: "Balanced template for a 5-15 person agency handling client delivery, meetings, and follow-up-heavy account management.",
+  deployment: {
+    mode: "docker-compose",
+    timezone: "Europe/London",
+    ownerChannel: "slack",
+  },
+  channels: {
+    slack: { enabled: true },
+    email: { enabled: true },
+  },
+  agents: {
+    defaults: {
+      heartbeat: {
+        every: "30m",
+        target: "last",
+        activeHours: { start: "07:00", end: "22:00" },
+      },
+      sandbox: { mode: "all", scope: "agent" },
+    },
+  },
+  hooks: {
+    enabled: true,
+    tokenEnv: "OPSCLAW_HOOKS_TOKEN",
+    path: "/hooks",
+    presets: ["gmail"],
+  },
+  skills: {
+    entries: {
+      "email-intel": { enabled: true },
+      "calendar-ops": { enabled: true },
+      "crm-sync": { enabled: true },
+      "task-tracker": { enabled: true },
+      "ops-reporting": { enabled: true },
+    },
+  },
+  approvals: {
+    externalEmail: "explicit",
+    externalMessage: "explicit",
+    calendarWrite: "explicit",
+    crmDealChange: "explicit",
+  },
+  briefing: {
+    morning: "07:15",
+    endOfDay: "18:15",
+    weekly: "Monday 08:30",
+    style: "standard",
+  },
+  alerting: {
+    quietHours: { start: "22:00", end: "07:00" },
+    vipImmediate: true,
+  },
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "opsclaw/heartbeat-state/v1",
+  "version": 1,
+  "lastChecks": {
+    "email": null,
+    "calendar": null,
+    "tasks": null,
+    "crm": null,
+    "reporting": null
+  },
+  "lastBriefingSent": null,
+  "lastHeartbeatRun": null,
+  "consecutiveErrors": {
+    "email": 0,
+    "calendar": 0,
+    "tasks": 0,
+    "crm": 0,
+    "reporting": 0
+  },
+  "runtime": {
+    "heartbeatIntervalMinutes": 30,
+    "quietHours": {
+      "start": "22:00",
+      "end": "07:00"
+    },
+    "status": "idle"
+  }
+}

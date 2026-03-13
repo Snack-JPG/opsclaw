@@ -1,0 +1,54 @@
+{
+  profile: "ecommerce",
+  description: "Template optimized for inbox triage, operations reporting, and issue escalation for store operators.",
+  deployment: {
+    mode: "vps",
+    timezone: "America/New_York",
+    ownerChannel: "telegram",
+  },
+  channels: {
+    telegram: { enabled: true },
+    email: { enabled: true },
+  },
+  agents: {
+    defaults: {
+      heartbeat: {
+        every: "15m",
+        target: "last",
+        activeHours: { start: "06:30", end: "23:00" },
+      },
+      sandbox: { mode: "all", scope: "agent" },
+    },
+  },
+  hooks: {
+    enabled: true,
+    tokenEnv: "OPSCLAW_HOOKS_TOKEN",
+    path: "/hooks",
+    presets: ["gmail"],
+  },
+  skills: {
+    entries: {
+      "email-intel": { enabled: true },
+      "calendar-ops": { enabled: false },
+      "crm-sync": { enabled: true },
+      "task-tracker": { enabled: true },
+      "ops-reporting": { enabled: true },
+    },
+  },
+  approvals: {
+    externalEmail: "explicit",
+    externalMessage: "explicit",
+    calendarWrite: "blocked",
+    crmDealChange: "explicit",
+  },
+  briefing: {
+    morning: "07:00",
+    endOfDay: "19:00",
+    weekly: "Monday 07:30",
+    style: "standard",
+  },
+  anomalyThresholds: {
+    supportSpikeFactor: 2.0,
+    deadLetters24h: 5,
+  },
+}

@@ -1,0 +1,32 @@
+services:
+  opsclaw:
+    image: node:22-bookworm-slim
+    container_name: opsclaw
+    working_dir: /opt/opsclaw
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OPSCLAW_WORKSPACE: /var/lib/openclaw/workspace
+      PYTHONUNBUFFERED: "1"
+    command: >
+      bash -lc "
+        npm install -g openclaw &&
+        mkdir -p /var/lib/openclaw/workspace/memory/dead-letters &&
+        cp -R /opt/opsclaw/workspace/. /var/lib/openclaw/workspace/ &&
+        openclaw gateway start
+      "
+    volumes:
+      - ./:/opt/opsclaw
+      - opsclaw-data:/var/lib/openclaw
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "command -v openclaw >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+volumes:
+  opsclaw-data:

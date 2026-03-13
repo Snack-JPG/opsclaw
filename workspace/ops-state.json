@@ -1,0 +1,48 @@
+{
+  "$schema": "opsclaw/ops-state/v1",
+  "version": 1,
+  "lastUpdated": "2026-03-13T00:00:00Z",
+  "workspaceId": "opsclaw-template",
+  "status": "ready_for_onboarding",
+  "email": {
+    "unreadCount": 0,
+    "urgentQueue": [],
+    "pendingDrafts": [],
+    "lastChecked": null
+  },
+  "calendar": {
+    "todayEvents": [],
+    "nextMeeting": null,
+    "prepStatus": {},
+    "lastChecked": null
+  },
+  "tasks": {
+    "dueToday": [],
+    "overdue": [],
+    "blocked": [],
+    "lastChecked": null
+  },
+  "crm": {
+    "followUpsDue": [],
+    "atRiskClients": [],
+    "lastChecked": null
+  },
+  "briefing": {
+    "lastMorningBrief": null,
+    "lastWeeklyReview": null,
+    "nextScheduledBrief": null
+  },
+  "approvals": {
+    "pending": [],
+    "lastResolved": null
+  },
+  "alerts": {
+    "active": [],
+    "lastSent": null
+  },
+  "reliability": {
+    "deadLetters24h": 0,
+    "lastReconciliation": null,
+    "degradedSystems": []
+  }
+}

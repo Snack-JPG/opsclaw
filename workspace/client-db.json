@@ -1,0 +1,24 @@
+{
+  "$schema": "opsclaw/client-db/v1",
+  "version": 1,
+  "workspaceId": "opsclaw-template",
+  "clients": {
+    "template-client": {
+      "name": "Template Contact",
+      "company": "Example Strategic Account",
+      "email": "contact@example.com",
+      "phone": null,
+      "crmId": null,
+      "tier": "standard",
+      "tags": [
+        "template",
+        "replace-during-onboarding"
+      ],
+      "lastContact": null,
+      "healthScore": null,
+      "notes": "Replace this sample record with real client data during CRM onboarding.",
+      "createdAt": "2026-03-13T00:00:00Z",
+      "updatedAt": "2026-03-13T00:00:00Z"
+    }
+  }
+}

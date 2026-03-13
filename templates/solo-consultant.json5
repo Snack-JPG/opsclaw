@@ -1,0 +1,49 @@
+{
+  profile: "solo-consultant",
+  description: "Lean deployment for a one-person service business that needs client follow-up discipline and concise daily briefings.",
+  deployment: {
+    mode: "client-machine",
+    timezone: "Europe/London",
+    ownerChannel: "telegram",
+  },
+  channels: {
+    telegram: { enabled: true },
+    email: { enabled: true },
+  },
+  agents: {
+    defaults: {
+      heartbeat: {
+        every: "30m",
+        target: "last",
+        activeHours: { start: "07:00", end: "21:00" },
+      },
+    },
+  },
+  hooks: {
+    enabled: true,
+    tokenEnv: "OPSCLAW_HOOKS_TOKEN",
+    path: "/hooks",
+    presets: ["gmail"],
+  },
+  skills: {
+    entries: {
+      "email-intel": { enabled: true },
+      "calendar-ops": { enabled: true },
+      "crm-sync": { enabled: false },
+      "task-tracker": { enabled: true },
+      "ops-reporting": { enabled: true },
+    },
+  },
+  approvals: {
+    externalEmail: "explicit",
+    externalMessage: "explicit",
+    calendarWrite: "explicit",
+    crmDealChange: "blocked",
+  },
+  briefing: {
+    morning: "07:30",
+    endOfDay: "18:00",
+    weekly: "Monday 08:00",
+    style: "concise",
+  },
+}
