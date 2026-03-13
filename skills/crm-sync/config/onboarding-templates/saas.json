@@ -1,0 +1,30 @@
+{
+  "templateId": "saas",
+  "label": "SaaS Client Onboarding",
+  "serviceType": "saas",
+  "deal": {
+    "titleSuffix": "Subscription Onboarding",
+    "stage": "onboarding",
+    "pipeline": "customer_success"
+  },
+  "welcomeEmail": {
+    "subject": "Welcome to {{companyName}}",
+    "summary": "Share login expectations, implementation milestones, support channel details, and training schedule."
+  },
+  "kickoff": {
+    "scheduleWithinDays": 3,
+    "durationMinutes": 45
+  },
+  "followUps": [
+    { "offsetDays": 1, "label": "Confirm account provisioning and admin access" },
+    { "offsetDays": 7, "label": "Usage review and activation blockers" },
+    { "offsetDays": 30, "label": "First-month adoption check-in" }
+  ],
+  "tasks": [
+    { "title": "Create workspace and admin account", "owner": "ops", "dueOffsetDays": 0, "priority": "high" },
+    { "title": "Send implementation questionnaire", "owner": "ops", "dueOffsetDays": 1, "priority": "high" },
+    { "title": "Schedule product training session", "owner": "owner", "dueOffsetDays": 2, "priority": "medium" },
+    { "title": "Set customer success reminders", "owner": "ops", "dueOffsetDays": 2, "priority": "medium" },
+    { "title": "Review activation metrics after week one", "owner": "owner", "dueOffsetDays": 7, "priority": "medium" }
+  ]
+}

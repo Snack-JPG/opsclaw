@@ -1,0 +1,30 @@
+{
+  "templateId": "consulting",
+  "label": "Consulting Client Onboarding",
+  "serviceType": "consulting",
+  "deal": {
+    "titleSuffix": "Consulting Engagement",
+    "stage": "onboarding",
+    "pipeline": "consulting"
+  },
+  "welcomeEmail": {
+    "subject": "Welcome to your consulting engagement with {{companyName}}",
+    "summary": "Confirm consulting goals, project sponsor, kickoff attendees, and decision cadence."
+  },
+  "kickoff": {
+    "scheduleWithinDays": 4,
+    "durationMinutes": 60
+  },
+  "followUps": [
+    { "offsetDays": 1, "label": "Confirm sponsor, stakeholders, and data access" },
+    { "offsetDays": 5, "label": "Kickoff recap and open items" },
+    { "offsetDays": 14, "label": "Initial findings review" }
+  ],
+  "tasks": [
+    { "title": "Collect statement of work and signed contract", "owner": "ops", "dueOffsetDays": 1, "priority": "high" },
+    { "title": "Request data access and system credentials", "owner": "ops", "dueOffsetDays": 1, "priority": "high" },
+    { "title": "Build stakeholder map", "owner": "owner", "dueOffsetDays": 2, "priority": "medium" },
+    { "title": "Prepare consulting kickoff deck", "owner": "owner", "dueOffsetDays": 3, "priority": "medium" },
+    { "title": "Create delivery cadence and reporting plan", "owner": "ops", "dueOffsetDays": 3, "priority": "medium" }
+  ]
+}

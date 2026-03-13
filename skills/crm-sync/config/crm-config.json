@@ -1,0 +1,83 @@
+{
+  "provider": "hubspot",
+  "timezone": "Europe/London",
+  "retry": {
+    "maxRetries": 3,
+    "baseDelaySeconds": 1.0,
+    "maxDelaySeconds": 20.0,
+    "jitterSeconds": 0.5
+  },
+  "followUps": {
+    "dailyRunHourLocal": 9,
+    "lookaheadDays": 7,
+    "highValueThreshold": 10000
+  },
+  "hubspot": {
+    "baseUrl": "https://api.hubapi.com",
+    "tokenEnv": "HUBSPOT_ACCESS_TOKEN",
+    "defaultPipelineId": "default",
+    "contactProperties": [
+      "firstname",
+      "lastname",
+      "email",
+      "phone",
+      "company",
+      "jobtitle",
+      "lifecyclestage",
+      "createdate",
+      "lastmodifieddate"
+    ],
+    "companyProperties": [
+      "name",
+      "domain",
+      "industry",
+      "phone",
+      "city",
+      "country",
+      "createdate",
+      "lastmodifieddate"
+    ],
+    "dealProperties": [
+      "dealname",
+      "dealstage",
+      "pipeline",
+      "amount",
+      "closedate",
+      "hs_lastmodifieddate",
+      "createdate",
+      "hubspot_owner_id"
+    ]
+  },
+  "pipedrive": {
+    "baseUrl": "https://your-company.pipedrive.com/api/v1",
+    "tokenEnv": "PIPEDRIVE_API_TOKEN",
+    "defaultPipelineId": 1,
+    "personFields": [
+      "name",
+      "email",
+      "phone",
+      "org_name",
+      "owner_name",
+      "add_time",
+      "update_time"
+    ],
+    "organizationFields": [
+      "name",
+      "address",
+      "owner_name",
+      "add_time",
+      "update_time"
+    ],
+    "dealFields": [
+      "title",
+      "status",
+      "stage_id",
+      "value",
+      "currency",
+      "expected_close_date",
+      "next_activity_date",
+      "add_time",
+      "update_time"
+    ]
+  }
+}

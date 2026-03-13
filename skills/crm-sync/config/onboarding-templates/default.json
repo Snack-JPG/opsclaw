@@ -1,0 +1,29 @@
+{
+  "templateId": "default",
+  "label": "Default Client Onboarding",
+  "serviceType": "default",
+  "deal": {
+    "titleSuffix": "Onboarding",
+    "stage": "onboarding",
+    "pipeline": "default"
+  },
+  "welcomeEmail": {
+    "subject": "Welcome to {{companyName}} onboarding",
+    "summary": "Thank the client, confirm the primary contact, and outline the first-week plan."
+  },
+  "kickoff": {
+    "scheduleWithinDays": 5,
+    "durationMinutes": 45
+  },
+  "followUps": [
+    { "offsetDays": 2, "label": "Confirm access and kickoff availability" },
+    { "offsetDays": 7, "label": "Week 1 check-in" },
+    { "offsetDays": 21, "label": "Progress and blockers review" }
+  ],
+  "tasks": [
+    { "title": "Create shared client folder", "owner": "ops", "dueOffsetDays": 1, "priority": "high" },
+    { "title": "Request required access and credentials", "owner": "ops", "dueOffsetDays": 1, "priority": "high" },
+    { "title": "Draft kickoff agenda", "owner": "owner", "dueOffsetDays": 2, "priority": "medium" },
+    { "title": "Create internal delivery checklist", "owner": "ops", "dueOffsetDays": 2, "priority": "medium" }
+  ]
+}

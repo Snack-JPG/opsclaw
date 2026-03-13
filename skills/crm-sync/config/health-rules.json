@@ -1,0 +1,49 @@
+{
+  "weights": {
+    "recency": 30,
+    "momentum": 25,
+    "responseRate": 20,
+    "meetings": 15,
+    "tasks": 10
+  },
+  "thresholds": {
+    "healthy": 70,
+    "atRisk": 40
+  },
+  "recencyDays": {
+    "excellent": 7,
+    "good": 14,
+    "warning": 30,
+    "critical": 45
+  },
+  "momentumDaysInStage": {
+    "proposal_sent": 14,
+    "negotiation": 21,
+    "contract_sent": 10,
+    "onboarding": 21,
+    "default": 30
+  },
+  "responseRate": {
+    "excellent": 0.85,
+    "good": 0.65,
+    "warning": 0.4
+  },
+  "meetingAttendanceRate": {
+    "excellent": 0.95,
+    "good": 0.8,
+    "warning": 0.6
+  },
+  "taskCompletionRate": {
+    "excellent": 0.9,
+    "good": 0.7,
+    "warning": 0.5
+  },
+  "followUpPriority": {
+    "overdueBase": 80,
+    "dueTodayBase": 65,
+    "upcomingBase": 45,
+    "atRiskBonus": 15,
+    "highValueBonus": 10,
+    "staleContactBonus": 10
+  }
+}
