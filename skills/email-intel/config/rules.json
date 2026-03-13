@@ -1,0 +1,80 @@
+{
+  "$schema": "opsclaw/email-intel/rules/v1",
+  "version": 1,
+  "defaults": {
+    "approvalRequired": true,
+    "maxAutoDraftUrgency": "medium",
+    "blockedCategories": ["spam"],
+    "blockedTerms": [
+      "refund",
+      "chargeback",
+      "lawsuit",
+      "legal notice",
+      "termination",
+      "disciplinary",
+      "payroll"
+    ]
+  },
+  "rules": [
+    {
+      "id": "ack-client-receipt",
+      "enabled": true,
+      "description": "Acknowledge normal client requests that do not create commitments.",
+      "match": {
+        "categories": ["client"],
+        "urgencies": ["medium", "low"],
+        "keywordsAny": ["question", "request", "review", "update"],
+        "keywordsNone": ["quote", "contract", "refund", "discount"]
+      },
+      "template": "acknowledgment.md",
+      "actionClass": "auto_draft",
+      "approvalRequired": true,
+      "recommendedAction": "Acknowledge receipt and commit to a follow-up window."
+    },
+    {
+      "id": "meeting-request",
+      "enabled": true,
+      "description": "Respond to scheduling requests with a neutral scheduling draft.",
+      "match": {
+        "categories": ["client", "internal"],
+        "urgencies": ["high", "medium", "low"],
+        "keywordsAny": ["meeting", "call", "availability", "schedule", "calendar"],
+        "keywordsNone": ["cancel contract", "urgent escalation"]
+      },
+      "template": "meeting_request.md",
+      "actionClass": "auto_draft",
+      "approvalRequired": true,
+      "recommendedAction": "Offer next-step scheduling without confirming unavailable times."
+    },
+    {
+      "id": "info-request",
+      "enabled": true,
+      "description": "Respond to routine information requests with a clarifying reply.",
+      "match": {
+        "categories": ["client", "internal"],
+        "urgencies": ["medium", "low"],
+        "keywordsAny": ["information", "details", "question", "clarify"],
+        "keywordsNone": ["pricing", "discount", "legal", "security"]
+      },
+      "template": "info_request.md",
+      "actionClass": "auto_draft",
+      "approvalRequired": true,
+      "recommendedAction": "Clarify scope and promise a detailed reply if needed."
+    },
+    {
+      "id": "ooo-during-quiet-window",
+      "enabled": true,
+      "description": "Prepare an out-of-office style acknowledgment for after-hours inbound mail.",
+      "match": {
+        "categories": ["client", "internal", "billing"],
+        "urgencies": ["low", "medium"],
+        "receivedOutsideHours": true,
+        "keywordsNone": ["outage", "security", "fraud", "urgent"]
+      },
+      "template": "out_of_office.md",
+      "actionClass": "auto_draft",
+      "approvalRequired": true,
+      "recommendedAction": "Acknowledge receipt and set timing expectations for follow-up."
+    }
+  ]
+}

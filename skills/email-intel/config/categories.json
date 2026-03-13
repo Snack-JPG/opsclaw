@@ -1,0 +1,165 @@
+{
+  "$schema": "opsclaw/email-intel/categories/v1",
+  "version": 1,
+  "defaults": {
+    "mediumUrgencyThreshold": 3,
+    "highUrgencyThreshold": 6,
+    "criticalUrgencyThreshold": 10,
+    "lowSignalMarketingThreshold": 4,
+    "lowSignalSpamThreshold": 6
+  },
+  "internalDomains": [
+    "yourcompany.com",
+    "opsclaw.local"
+  ],
+  "urgencyKeywords": {
+    "critical": [
+      "urgent",
+      "immediately",
+      "asap",
+      "outage",
+      "down",
+      "security incident",
+      "breach",
+      "legal notice",
+      "lawsuit",
+      "termination",
+      "cancel",
+      "chargeback",
+      "fraud",
+      "deadline today",
+      "payment failed",
+      "data loss",
+      "escalation"
+    ],
+    "high": [
+      "today",
+      "blocked",
+      "issue",
+      "problem",
+      "invoice",
+      "contract",
+      "renewal",
+      "follow up",
+      "action required",
+      "approval needed",
+      "meeting",
+      "reschedule",
+      "unavailable"
+    ],
+    "medium": [
+      "question",
+      "request",
+      "review",
+      "update",
+      "proposal",
+      "availability",
+      "feedback",
+      "next steps",
+      "information"
+    ],
+    "low": [
+      "newsletter",
+      "webinar",
+      "promo",
+      "promotion",
+      "sale",
+      "announcement",
+      "fyi",
+      "digest"
+    ]
+  },
+  "categoryKeywords": {
+    "client": [
+      "client",
+      "customer",
+      "prospect",
+      "proposal",
+      "deliverable",
+      "statement of work",
+      "scope",
+      "kickoff",
+      "contract"
+    ],
+    "internal": [
+      "team",
+      "internal",
+      "staff",
+      "employee",
+      "ops",
+      "standup",
+      "hiring",
+      "1:1"
+    ],
+    "billing": [
+      "invoice",
+      "receipt",
+      "payment",
+      "paid",
+      "billing",
+      "subscription",
+      "refund",
+      "renewal",
+      "charge",
+      "card",
+      "vat",
+      "tax"
+    ],
+    "marketing": [
+      "newsletter",
+      "launch",
+      "webinar",
+      "offer",
+      "discount",
+      "ebook",
+      "whitepaper",
+      "demo",
+      "event"
+    ],
+    "spam": [
+      "bitcoin",
+      "casino",
+      "seo guarantee",
+      "guest post",
+      "viagra",
+      "act now",
+      "work from home",
+      "free trial"
+    ]
+  },
+  "senderRules": {
+    "noreplyPatterns": [
+      "noreply@",
+      "no-reply@",
+      "donotreply@"
+    ],
+    "billingDomains": [
+      "stripe.com",
+      "xero.com",
+      "quickbooks.com"
+    ],
+    "marketingDomains": [
+      "mailchimpapp.net",
+      "hubspotemail.net",
+      "sendgrid.net"
+    ],
+    "spamDomains": [
+      "mailer.biz",
+      "leadgen-offer.example"
+    ]
+  },
+  "businessImpactTerms": [
+    "revenue",
+    "churn",
+    "renewal",
+    "termination",
+    "deadline",
+    "breach",
+    "security",
+    "payment",
+    "refund",
+    "contract",
+    "legal",
+    "chargeback"
+  ]
+}

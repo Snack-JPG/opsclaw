@@ -1,0 +1,45 @@
+{
+  "$schema": "opsclaw/email-intel/vip-senders/v1",
+  "version": 1,
+  "defaultEscalation": {
+    "alertImmediately": true,
+    "overrideQuietHoursForCritical": true
+  },
+  "senders": [
+    {
+      "email": "vip@example.com",
+      "name": "Example VIP",
+      "company": "Strategic Client Co",
+      "tier": "vip",
+      "reason": "Top account with high escalation risk",
+      "tags": ["client", "revenue"],
+      "alertImmediately": true
+    },
+    {
+      "email": "legal@example.com",
+      "name": "Legal Counsel",
+      "company": "External",
+      "tier": "vip",
+      "reason": "Legal or contractual exposure",
+      "tags": ["legal", "external"],
+      "alertImmediately": true
+    },
+    {
+      "email": "partner@example.com",
+      "name": "Key Partner",
+      "company": "Channel Partner",
+      "tier": "priority",
+      "reason": "Revenue-sensitive partnership contact",
+      "tags": ["partner", "revenue"],
+      "alertImmediately": true
+    }
+  ],
+  "domains": [
+    {
+      "domain": "strategicclient.com",
+      "tier": "vip",
+      "reason": "Strategic client account domain",
+      "tags": ["client"]
+    }
+  ]
+}
