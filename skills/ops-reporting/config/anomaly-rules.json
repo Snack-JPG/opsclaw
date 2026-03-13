@@ -1,0 +1,45 @@
+{
+  "defaults": {
+    "baselineWindow": 5,
+    "minimumBaselinePoints": 3,
+    "severityLabels": {
+      "warning": "warning",
+      "critical": "critical"
+    }
+  },
+  "rules": {
+    "emailVolumeSpike": {
+      "enabled": true,
+      "metric": "emailVolume",
+      "spikeMultiplier": 2.0,
+      "criticalMultiplier": 2.5,
+      "minimumCurrent": 15
+    },
+    "clientSilence": {
+      "enabled": true,
+      "vipMultiplier": 1.5,
+      "standardMultiplier": 2.0,
+      "criticalAfterDays": 21
+    },
+    "taskCompletionDrop": {
+      "enabled": true,
+      "metric": "taskCompletionCount",
+      "dropRatio": 0.6,
+      "criticalDropRatio": 0.4,
+      "minimumBaseline": 3
+    },
+    "calendarOverload": {
+      "enabled": true,
+      "metric": "meetingCount",
+      "warningAbove": 6,
+      "criticalAbove": 8
+    },
+    "missedFollowUps": {
+      "enabled": true,
+      "metric": "missedFollowUps",
+      "warningAbove": 1,
+      "criticalAbove": 3,
+      "criticalTier": "vip"
+    }
+  }
+}

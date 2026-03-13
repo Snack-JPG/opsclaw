@@ -1,0 +1,92 @@
+{
+  "timezone": "Europe/London",
+  "historyWindow": 4,
+  "defaultDirection": "lower_is_better",
+  "statusLabels": {
+    "healthy": "healthy",
+    "warning": "warning",
+    "critical": "critical"
+  },
+  "metrics": [
+    {
+      "id": "inbox_response_due",
+      "label": "Emails needing response",
+      "description": "Open inbox items that still require a human response.",
+      "direction": "lower_is_better",
+      "unit": "count",
+      "warningAbove": 10,
+      "criticalAbove": 20,
+      "alertOnThresholdBreach": true
+    },
+    {
+      "id": "urgent_email_backlog",
+      "label": "Urgent email backlog",
+      "description": "Critical and high-priority email items waiting for action.",
+      "direction": "lower_is_better",
+      "unit": "count",
+      "warningAbove": 3,
+      "criticalAbove": 6,
+      "alertOnThresholdBreach": true
+    },
+    {
+      "id": "tasks_completed_week",
+      "label": "Tasks completed this week",
+      "description": "Work closed during the current week.",
+      "direction": "higher_is_better",
+      "unit": "count",
+      "warningBelow": 12,
+      "criticalBelow": 6,
+      "alertOnThresholdBreach": true
+    },
+    {
+      "id": "tasks_overdue",
+      "label": "Overdue tasks",
+      "description": "Open work that is past due.",
+      "direction": "lower_is_better",
+      "unit": "count",
+      "warningAbove": 3,
+      "criticalAbove": 6,
+      "alertOnThresholdBreach": true
+    },
+    {
+      "id": "crm_followups_due",
+      "label": "CRM follow-ups due",
+      "description": "Follow-ups due or overdue across active clients and deals.",
+      "direction": "lower_is_better",
+      "unit": "count",
+      "warningAbove": 4,
+      "criticalAbove": 8,
+      "alertOnThresholdBreach": true
+    },
+    {
+      "id": "at_risk_clients",
+      "label": "At-risk clients",
+      "description": "Clients with deteriorating health or stale engagement.",
+      "direction": "lower_is_better",
+      "unit": "count",
+      "warningAbove": 2,
+      "criticalAbove": 4,
+      "alertOnThresholdBreach": true
+    },
+    {
+      "id": "calendar_meeting_hours_week",
+      "label": "Meeting hours this week",
+      "description": "Total scheduled meeting hours for the current week.",
+      "direction": "lower_is_better",
+      "unit": "hours",
+      "warningAbove": 15,
+      "criticalAbove": 22,
+      "alertOnThresholdBreach": true
+    },
+    {
+      "id": "weighted_pipeline_value",
+      "label": "Weighted pipeline value",
+      "description": "Probability-adjusted pipeline value from CRM.",
+      "direction": "higher_is_better",
+      "unit": "currency",
+      "warningBelow": 30000,
+      "criticalBelow": 15000,
+      "alertOnThresholdBreach": true
+    }
+  ]
+}
