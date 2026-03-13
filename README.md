@@ -175,7 +175,7 @@ Add polished captures here before publishing a public showcase. Recommended set:
 | Notion | Task database operations | Implemented |
 | Asana | Task creation and reporting | Implemented |
 
-See [docs/api-integrations.md](/Users/austin/Desktop/opsclaw/docs/api-integrations.md) for setup expectations, auth model, and operational notes.
+See [docs/api-integrations.md](docs/api-integrations.md) for setup expectations, auth model, and operational notes.
 
 ## Deployment Modes
 
@@ -222,12 +222,12 @@ opsclaw/
 
 ## Documentation
 
-- [docs/setup-guide.md](/Users/austin/Desktop/opsclaw/docs/setup-guide.md)
-- [docs/security-guide.md](/Users/austin/Desktop/opsclaw/docs/security-guide.md)
-- [docs/skill-customisation.md](/Users/austin/Desktop/opsclaw/docs/skill-customisation.md)
-- [docs/troubleshooting.md](/Users/austin/Desktop/opsclaw/docs/troubleshooting.md)
-- [docs/api-integrations.md](/Users/austin/Desktop/opsclaw/docs/api-integrations.md)
-- [DEMO.md](/Users/austin/Desktop/opsclaw/DEMO.md)
+- [docs/setup-guide.md](docs/setup-guide.md)
+- [docs/security-guide.md](docs/security-guide.md)
+- [docs/skill-customisation.md](docs/skill-customisation.md)
+- [docs/troubleshooting.md](docs/troubleshooting.md)
+- [docs/api-integrations.md](docs/api-integrations.md)
+- [DEMO.md](DEMO.md)
 
 ## Contributing
 
@@ -246,8 +246,8 @@ Bug reports and requests are supported through the issue templates in `.github/I
 - Never commit live tokens, OAuth credentials, or `.env` files.
 - Treat `workspace/`, memory files, CRM exports, and generated reports as confidential.
 - Run `openclaw security audit --deep` before production launch.
-- Use [docs/security-guide.md](/Users/austin/Desktop/opsclaw/docs/security-guide.md) as the pre-flight checklist.
+- Use [docs/security-guide.md](docs/security-guide.md) as the pre-flight checklist.
 
 ## License
 
-MIT. See [LICENSE](/Users/austin/Desktop/opsclaw/LICENSE).
+MIT. See [LICENSE](LICENSE).
