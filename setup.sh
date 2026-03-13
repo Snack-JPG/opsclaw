@@ -65,5 +65,6 @@ echo
 echo "Next steps:"
 echo "  1. Run ${ROOT_DIR}/config-wizard.sh"
 echo "  2. Add secrets to ${TARGET_SUPPORT}/.env or your secret manager"
-echo "  3. Run openclaw security audit --deep"
-echo "  4. Start with openclaw gateway start"
+echo "  3. Run ${ROOT_DIR}/scripts/health-check.sh"
+echo "  4. Run openclaw security audit --deep"
+echo "  5. Start with openclaw gateway start"
