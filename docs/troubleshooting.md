@@ -71,24 +71,27 @@ Check:
 
 Check:
 
-- Gmail API and Pub/Sub are enabled in Google Cloud
-- the Pub/Sub topic and subscription exist
-- Gmail watch registration is active
-- the webhook endpoint matches the configured push target
+- `gws auth status` succeeds
+- Gmail API access is available to the authenticated account
+- any optional webhook or polling job you added around Gmail is still running
+- the webhook endpoint matches the configured push target if you are using one
 - `OPSCLAW_HOOKS_TOKEN` is set correctly
 
-Use the setup helper in [skills/email-intel/scripts/gmail-setup.sh](/Users/austin/Desktop/opsclaw/skills/email-intel/scripts/gmail-setup.sh) and confirm the watch flow end to end.
+Use [gws-auth-setup.sh](/Users/austin/Desktop/opsclaw/skills/email-intel/scripts/gws-auth-setup.sh) or run `gws auth setup --login`, then confirm the inbox fetch flow end to end.
 
 ### Google Calendar auth expires or fails
 
-Regenerate or refresh the token with:
+Check auth with:
 
 ```bash
-python3 skills/calendar-ops/scripts/gcal-auth.py status \
-  --token-path skills/calendar-ops/config/google-token.json
+gws auth status
 ```
 
-If needed, rerun the `auth` command with a valid OAuth client JSON file.
+If needed, rerun:
+
+```bash
+gws auth setup --login
+```
 
 ### HubSpot or Pipedrive requests fail
 

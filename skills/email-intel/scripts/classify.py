@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic email classification for OpsClaw Email Intelligence."""
+"""Fetch Gmail data via gws and classify it deterministically."""
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ from email.utils import parseaddr
 from pathlib import Path
 from typing import Any
 
+from gws_gmail import get_message, iso_now, list_messages
+
 
 URGENCY_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
@@ -21,10 +23,6 @@ URGENCY_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 def load_json(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
-
-
-def iso_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def normalize_text(value: Any) -> str:
@@ -231,6 +229,11 @@ def recommend_action(urgency: str, category: str, is_vip: bool) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--email-path", type=Path, help="Path to a normalized email JSON document.")
+    parser.add_argument("--message-id", help="Fetch a single Gmail message via gws before classifying.")
+    parser.add_argument("--query", help="Gmail search query for inbox fetch mode.")
+    parser.add_argument("--max-results", type=int, default=10, help="Maximum Gmail messages to fetch.")
+    parser.add_argument("--label", action="append", dest="labels", help="Repeatable Gmail label filter.")
+    parser.add_argument("--include-read", action="store_true", help="Include read mail in fetch mode.")
     parser.add_argument("--categories", type=Path, required=True, help="Path to categories.json.")
     parser.add_argument("--vip", type=Path, required=True, help="Path to vip-senders.json.")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output.")
@@ -243,13 +246,32 @@ def read_email_payload(path: Path | None) -> dict[str, Any]:
     return load_json(path)
 
 
+def fetch_source_emails(args: argparse.Namespace) -> list[dict[str, Any]]:
+    if args.email_path is not None:
+        return [read_email_payload(args.email_path)]
+    if args.message_id:
+        return [get_message(args.message_id)]
+    return list_messages(
+        query=args.query or "in:inbox",
+        max_results=args.max_results,
+        label_ids=args.labels or ["INBOX"],
+        unread_only=not args.include_read,
+    )
+
+
 def main() -> int:
     args = parse_args()
-    email_doc = read_email_payload(args.email_path)
     categories_doc = load_json(args.categories)
     vip_doc = load_json(args.vip)
-    result = classify(email_doc, categories_doc, vip_doc)
-    json.dump(result, sys.stdout, indent=2 if args.pretty else None)
+
+    emails = fetch_source_emails(args)
+    results = [classify(email_doc, categories_doc, vip_doc) for email_doc in emails]
+    payload: Any
+    if len(results) == 1 and (args.email_path is not None or args.message_id):
+        payload = results[0]
+    else:
+        payload = {"emails": results, "count": len(results), "fetchedAt": iso_now()}
+    json.dump(payload, sys.stdout, indent=2 if args.pretty else None)
     sys.stdout.write("\n")
     return 0
 

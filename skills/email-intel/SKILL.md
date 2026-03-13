@@ -5,7 +5,7 @@ description: Email intelligence for OpsClaw: triage Gmail or Outlook inbox activ
 
 # Email Intelligence Skill
 
-Use this skill whenever the user asks to check email, summarize inbox activity, classify incoming mail, draft a reply, maintain a VIP sender list, or operate the Gmail webhook / briefing flow. It also applies to scheduled heartbeat and daily briefing runs when email is enabled.
+Use this skill whenever the user asks to check email, summarize inbox activity, classify incoming mail, draft a reply, maintain a VIP sender list, or operate the Gmail / briefing flow through the Google Workspace CLI (`gws`). It also applies to scheduled heartbeat and daily briefing runs when email is enabled.
 
 ## Load Order
 1. Read `workspace/SOUL.md`, `workspace/USER.md`, `workspace/AGENTS.md`, and `workspace/ops-state.json`.
@@ -20,7 +20,7 @@ Use this skill whenever the user asks to check email, summarize inbox activity, 
    - `scripts/auto_responder.py`
 
 ## Triggers
-- `Webhook`: Gmail Pub/Sub push mapped through OpenClaw's `gmail` preset.
+- `Webhook`: Gmail change detection or polling flow mapped through OpenClaw's inbox automation.
 - `Heartbeat`: urgent unread scan and stale draft / queue review.
 - `Cron`: daily inbox briefing at the owner's configured briefing time.
 - `Manual`: commands such as `Check email`, `Email summary`, `Draft reply to <sender>`, `Mark <email> as handled`, or `Add <sender> to VIP list`.
@@ -58,11 +58,12 @@ Escalate upward when multiple signals stack: VIP sender, explicit urgency terms,
 When category is ambiguous, prefer the most operationally meaningful category over `spam`.
 
 ## Webhook Flow: New Email
-When a Gmail webhook triggers:
+When a Gmail-triggered email workflow runs:
 
 1. Treat the ingress as `internal_query` until parsing succeeds.
 2. Enforce idempotency using the message ID or webhook event ID. Skip duplicates and log them as duplicate receipts, not failures.
-3. Normalize the email payload into:
+3. If only a Gmail message ID is available, fetch the full message via `gws gmail users messages get`.
+4. Normalize the email payload into:
    - message ID
    - thread ID
    - timestamp
@@ -71,20 +72,20 @@ When a Gmail webhook triggers:
    - subject
    - plain-text body
    - snippet / preview
-4. Run `scripts/classify.py` with the normalized payload plus config files.
-5. Update `workspace/ops-state.json`:
+5. Run `scripts/classify.py` with the normalized payload plus config files, or let it fetch directly from Gmail with `gws`.
+6. Update `workspace/ops-state.json`:
    - increment / refresh `email.unreadCount`
    - append urgent items to `email.urgentQueue`
    - append draft approvals to `email.pendingDrafts` and `approvals.pending`
    - update `email.lastChecked` and `lastUpdated`
-6. If the sender matches `config/vip-senders.json` and the message is not low-signal marketing, alert the owner immediately unless quiet-hours policy blocks it.
-7. If the message matches an auto-response rule, run `scripts/auto_responder.py` to produce a draft and queue it for approval. Drafting is `auto_draft`; sending remains `external_email` and always requires explicit approval.
-8. Write a concise memory entry to today's note with:
+7. If the sender matches `config/vip-senders.json` and the message is not low-signal marketing, alert the owner immediately unless quiet-hours policy blocks it.
+8. If the message matches an auto-response rule, run `scripts/auto_responder.py` to produce a draft, create a Gmail draft via `gws gmail users drafts create`, and queue it for approval. Sending remains `external_email` and always requires explicit approval.
+9. Write a concise memory entry to today's note with:
    - what arrived
    - why it matters
    - classification
    - recommended next step
-9. On transient failures, retry with exponential backoff. On exhausted retries, write a dead letter to `workspace/memory/dead-letters/YYYY-MM-DD.json`.
+10. On transient failures, retry with exponential backoff. On exhausted retries, write a dead letter to `workspace/memory/dead-letters/YYYY-MM-DD.json`.
 
 ## Heartbeat Flow
 During heartbeat runs:
@@ -101,7 +102,7 @@ During heartbeat runs:
    - non-critical: queue for morning briefing
 
 ## Daily Briefing Format
-Run `scripts/briefing.py` for the last 24 hours of unread or newly classified mail. Deliver a concise owner-facing brief in this structure:
+Run `scripts/briefing.py` for the last 24 hours of unread or newly classified mail. It can consume a pre-classified JSON file or fetch fresh inbox data via `gws gmail users messages list` + `get`. Deliver a concise owner-facing brief in this structure:
 
 ```text
 Email Briefing
@@ -136,11 +137,11 @@ Rules:
 
 ## Manual Commands
 - `Check email`
-  - Scan the latest unread mail, classify, and report anything `high` or `critical`.
+  - Scan the latest unread mail with `gws gmail users messages list`, classify, and report anything `high` or `critical`.
 - `Email summary`
-  - Generate an on-demand briefing for the default or requested time window.
+  - Generate an on-demand briefing for the default or requested time window from live Gmail data or a supplied JSON snapshot.
 - `Draft reply to <sender or subject>`
-  - Find the thread, generate a draft, summarize why the draft fits, and queue for approval.
+  - Find the thread, generate a draft, store it in Gmail drafts via `gws`, summarize why the draft fits, and queue for approval.
 - `Mark <email> as handled`
   - Remove it from urgent / pending lists, update state, and note the resolution in memory.
 - `Add <sender> to VIP list`
@@ -148,6 +149,7 @@ Rules:
 
 ## Drafting and Approval Policy
 - Draft generation is allowed without approval.
+- Gmail draft creation is allowed without approval.
 - Draft sending is never allowed without explicit owner approval captured in state or the active conversation.
 - Every draft queue item must include:
   - message ID / thread ID
@@ -160,6 +162,8 @@ Rules:
 
 ## Reliability and Observability
 - Use deterministic scripts for classification, briefing, and draft generation.
+- Use `gws auth setup` and `gws auth login` for shared Google Workspace authentication instead of per-skill OAuth code.
+- Use `gws gmail users messages list|get` for inbox reads and `gws gmail users drafts create|send` for draft operations.
 - Prefer JSON in / JSON out for script boundaries.
 - Preserve correlation IDs from webhook to queue entry to memory note when possible.
 - Use the addendum reliability model:
@@ -170,7 +174,7 @@ Rules:
 
 ## Setup and References
 - Human setup instructions live in `README.md`.
-- Gmail project bootstrap is handled by `scripts/gmail-setup.sh`.
+- Gmail / Workspace auth bootstrap is handled by `scripts/gws-auth-setup.sh`.
 - Response templates live in `scripts/templates/`.
 
 ## Acceptance Standard

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Generate meeting prep documents for upcoming calendar events."""
+"""Generate meeting prep documents using gws calendar and gmail context."""
 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -13,21 +15,57 @@ from pathlib import Path
 from typing import Any
 
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def load_module(module_name: str, path: Path) -> Any:
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load module: {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+GMAIL_HELPERS = load_module("opsclaw_email_gws_gmail", REPO_ROOT / "skills" / "email-intel" / "scripts" / "gws_gmail.py")
+
+
 def load_json(path: Path | None) -> Any:
-    """Load JSON from a path, returning an empty structure for absent optional inputs."""
     if path is None:
         return {}
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
+def fetch_event(calendars_path: Path, calendar_id: str, event_id: str) -> dict[str, Any]:
+    script_path = Path(__file__).with_name("gcal-client.py")
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(script_path),
+            "get-event",
+            "--calendars-path",
+            str(calendars_path),
+            "--calendar-id",
+            calendar_id,
+            "--event-id",
+            event_id,
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip() or "gcal-client get-event failed")
+    payload = json.loads(completed.stdout)
+    return payload["event"]
+
+
 def utc_now() -> datetime:
-    """Return the current UTC time without microseconds."""
     return datetime.now(timezone.utc).replace(microsecond=0)
 
 
 def parse_iso_datetime(value: str | None) -> datetime | None:
-    """Parse an ISO timestamp if provided."""
     if not value:
         return None
     normalized = value.replace("Z", "+00:00")
@@ -38,29 +76,24 @@ def parse_iso_datetime(value: str | None) -> datetime | None:
 
 
 def normalize_text(value: Any) -> str:
-    """Collapse whitespace and coerce to text."""
     if value is None:
         return ""
     return re.sub(r"\s+", " ", str(value)).strip()
 
 
 def slugify(value: str) -> str:
-    """Create a simple filename slug."""
     slug = re.sub(r"[^a-zA-Z0-9]+", "-", value).strip("-").lower()
     return slug or "meeting"
 
 
 @dataclass(frozen=True)
 class PrepDecision:
-    """Outcome of prep-rule evaluation."""
-
     required: bool
     priority: str
     reasons: list[str]
 
 
 def event_duration_minutes(event_doc: dict[str, Any]) -> int:
-    """Return the event duration in minutes when both endpoints are present."""
     start = parse_iso_datetime(event_doc.get("start"))
     end = parse_iso_datetime(event_doc.get("end"))
     if not start or not end:
@@ -69,24 +102,17 @@ def event_duration_minutes(event_doc: dict[str, Any]) -> int:
 
 
 def attendee_emails(event_doc: dict[str, Any]) -> list[str]:
-    """Extract attendee email addresses."""
     attendees = event_doc.get("attendees", [])
     return [str(item.get("email")).lower() for item in attendees if item.get("email")]
 
 
 def is_external_attendee(email: str, internal_domains: set[str]) -> bool:
-    """Return whether an attendee is outside the configured internal domains."""
     if "@" not in email:
         return False
     return email.split("@", 1)[1].lower() not in internal_domains
 
 
-def should_generate_prep(
-    event_doc: dict[str, Any],
-    prep_rules: dict[str, Any],
-    internal_domains: set[str],
-) -> PrepDecision:
-    """Evaluate prep rules against an event."""
+def should_generate_prep(event_doc: dict[str, Any], prep_rules: dict[str, Any], internal_domains: set[str]) -> PrepDecision:
     defaults = prep_rules.get("defaults", {})
     if not defaults.get("enabled", True):
         return PrepDecision(False, "low", ["prep disabled in defaults"])
@@ -136,8 +162,32 @@ def should_generate_prep(
     return PrepDecision(False, priority, ["no prep rule matched"])
 
 
+def fetch_recent_interactions(event_doc: dict[str, Any], max_results: int) -> list[dict[str, Any]]:
+    participants = attendee_emails(event_doc)[:4]
+    subject = normalize_text(event_doc.get("summary"))
+    query_terms = [f'from:{email}' for email in participants]
+    if subject:
+        query_terms.append(f'subject:"{subject[:40]}"')
+    if not query_terms:
+        return []
+    query = " newer_than:30d ".join(query_terms) if len(query_terms) == 1 else "(" + " OR ".join(query_terms) + ") newer_than:30d"
+    try:
+        messages = GMAIL_HELPERS.list_messages(query=query, max_results=max_results, label_ids=["INBOX"], unread_only=False)
+    except Exception:
+        return []
+    interactions: list[dict[str, Any]] = []
+    for item in messages:
+        interactions.append(
+            {
+                "timestamp": item.get("receivedAt"),
+                "source": "gmail",
+                "summary": normalize_text(item.get("subject")) + ": " + normalize_text(item.get("snippet") or item.get("body"))[:200],
+            }
+        )
+    return interactions
+
+
 def summarize_interactions(interactions_doc: Any, limit: int) -> list[str]:
-    """Summarize recent interactions or notes."""
     items = interactions_doc if isinstance(interactions_doc, list) else interactions_doc.get("interactions", [])
     summarized: list[str] = []
     for item in items[:limit]:
@@ -152,7 +202,6 @@ def summarize_interactions(interactions_doc: Any, limit: int) -> list[str]:
 
 
 def build_attendee_notes(event_doc: dict[str, Any], attendee_context_doc: Any, crm_context_doc: Any) -> list[str]:
-    """Merge attendee context from explicit attendee and CRM sources."""
     notes: list[str] = []
     attendees = event_doc.get("attendees", [])
     attendee_context_map = attendee_context_doc if isinstance(attendee_context_doc, dict) else {}
@@ -178,7 +227,6 @@ def build_attendee_notes(event_doc: dict[str, Any], attendee_context_doc: Any, c
 
 
 def infer_talking_points(event_doc: dict[str, Any], decision: PrepDecision, interactions: list[str]) -> list[str]:
-    """Generate practical talking points from the meeting metadata and context."""
     talking_points: list[str] = []
     title = normalize_text(event_doc.get("summary"))
     description = normalize_text(event_doc.get("description"))
@@ -197,20 +245,12 @@ def infer_talking_points(event_doc: dict[str, Any], decision: PrepDecision, inte
 
 
 def infer_open_items(interactions: list[str]) -> list[str]:
-    """Pull action-oriented follow-ups from interaction summaries."""
     verbs = ("follow up", "send", "review", "approve", "decide", "confirm", "share", "deliver")
     items = [entry for entry in interactions if any(verb in entry.lower() for verb in verbs)]
     return items[:5] or ["No explicit open items found in the supplied context."]
 
 
-def generate_prep(
-    event_doc: dict[str, Any],
-    prep_rules: dict[str, Any],
-    attendee_context_doc: Any,
-    interactions_doc: Any,
-    crm_context_doc: Any,
-) -> dict[str, Any]:
-    """Generate the prep artifact payload."""
+def generate_prep(event_doc: dict[str, Any], prep_rules: dict[str, Any], attendee_context_doc: Any, interactions_doc: Any, crm_context_doc: Any) -> dict[str, Any]:
     internal_domains = {str(domain).lower() for domain in prep_rules.get("internalDomains", [])}
     decision = should_generate_prep(event_doc, prep_rules, internal_domains)
     interaction_limit = int(prep_rules.get("defaults", {}).get("includeRecentInteractionLimit", 5))
@@ -246,7 +286,6 @@ def generate_prep(
 
 
 def render_markdown(prep_doc: dict[str, Any]) -> str:
-    """Render the prep payload as markdown."""
     event = prep_doc["event"]
     lines = [
         f"# Meeting Prep: {event.get('summary') or 'Untitled Meeting'}",
@@ -286,7 +325,6 @@ def render_markdown(prep_doc: dict[str, Any]) -> str:
 
 
 def default_output_path(event_doc: dict[str, Any], prep_rules: dict[str, Any]) -> Path:
-    """Build a default output path from prep rules."""
     directory = Path(prep_rules.get("defaults", {}).get("writeToDirectory", "workspace/prep"))
     start = parse_iso_datetime(event_doc.get("start"))
     prefix = start.strftime("%Y-%m-%d-%H%M") if start else utc_now().strftime("%Y-%m-%d-%H%M")
@@ -295,37 +333,39 @@ def default_output_path(event_doc: dict[str, Any], prep_rules: dict[str, Any]) -
 
 
 def parse_args() -> argparse.Namespace:
-    """Build the CLI parser."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--event-path", type=Path, required=True, help="Path to a normalized event JSON document.")
+    parser.add_argument("--event-path", type=Path, help="Path to a normalized event JSON document.")
+    parser.add_argument("--calendars-path", type=Path, help="Path to calendars.json for live fetch mode.")
+    parser.add_argument("--calendar-id", help="Calendar ID for live fetch mode.")
+    parser.add_argument("--event-id", help="Event ID for live fetch mode.")
     parser.add_argument("--prep-rules", type=Path, required=True, help="Path to prep-rules.json.")
     parser.add_argument("--attendee-context", type=Path, help="Optional attendee context JSON.")
     parser.add_argument("--recent-interactions", type=Path, help="Optional recent interaction JSON.")
     parser.add_argument("--crm-context", type=Path, help="Optional CRM context JSON.")
     parser.add_argument("--output", type=Path, help="Optional file path for the markdown prep doc.")
-    parser.add_argument(
-        "--format",
-        choices=["markdown", "json"],
-        default="markdown",
-        help="Primary stdout output format.",
-    )
-    parser.add_argument(
-        "--write-default-output",
-        action="store_true",
-        help="Write markdown to the default output directory from prep-rules.json.",
-    )
+    parser.add_argument("--format", choices=["markdown", "json"], default="markdown", help="Primary stdout output format.")
+    parser.add_argument("--write-default-output", action="store_true", help="Write markdown to the default output directory from prep-rules.json.")
     return parser.parse_args()
 
 
 def main() -> int:
-    """Entry point."""
     args = parse_args()
 
     try:
-        event_doc = load_json(args.event_path)
+        if args.event_path:
+            event_doc = load_json(args.event_path)
+        else:
+            if not args.calendars_path or not args.calendar_id or not args.event_id:
+                raise ValueError("--calendars-path, --calendar-id, and --event-id are required in live fetch mode.")
+            event_doc = fetch_event(args.calendars_path, args.calendar_id, args.event_id)
+
         prep_rules = load_json(args.prep_rules)
         attendee_context_doc = load_json(args.attendee_context)
-        interactions_doc = load_json(args.recent_interactions)
+        if args.recent_interactions:
+            interactions_doc = load_json(args.recent_interactions)
+        else:
+            fetched = fetch_recent_interactions(event_doc, int(prep_rules.get("defaults", {}).get("includeRecentInteractionLimit", 5)))
+            interactions_doc = {"interactions": fetched}
         crm_context_doc = load_json(args.crm_context)
         prep_doc = generate_prep(event_doc, prep_rules, attendee_context_doc, interactions_doc, crm_context_doc)
         markdown = render_markdown(prep_doc)

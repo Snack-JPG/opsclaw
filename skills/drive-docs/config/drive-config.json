@@ -1,0 +1,16 @@
+{
+  "defaults": {
+    "monitoredFolderIds": [
+      "root"
+    ],
+    "sharedDriveIds": [],
+    "defaultPageSize": 25
+  },
+  "folders": [
+    {
+      "id": "root",
+      "label": "My Drive",
+      "monitor": true
+    }
+  ]
+}

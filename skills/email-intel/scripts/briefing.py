@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a concise email briefing from classified email data."""
+"""Generate a concise email briefing from classified Gmail data."""
 
 from __future__ import annotations
 
@@ -11,6 +11,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from classify import classify
+from gws_gmail import iso_now, list_messages, parse_iso_datetime
+
 
 URGENCY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
@@ -18,16 +21,6 @@ URGENCY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 def load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
-
-
-def parse_time(value: str | None) -> datetime | None:
-    if not value:
-        return None
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def iso_now() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
 
 
 def summarize_email(item: dict[str, Any]) -> str:
@@ -47,7 +40,7 @@ def load_items(path: Path) -> list[dict[str, Any]]:
 def filter_window(items: list[dict[str, Any]], since: datetime) -> list[dict[str, Any]]:
     filtered: list[dict[str, Any]] = []
     for item in items:
-        received = parse_time(item.get("receivedAt"))
+        received = parse_iso_datetime(item.get("receivedAt"))
         if received is None or received >= since:
             filtered.append(item)
     return filtered
@@ -60,7 +53,7 @@ def format_sender(item: dict[str, Any]) -> str:
 
 def oldest_action_item(items: list[dict[str, Any]]) -> str:
     action_items = [
-        parse_time(item.get("receivedAt"))
+        parse_iso_datetime(item.get("receivedAt"))
         for item in items
         if item.get("classification", {}).get("urgency") in {"critical", "high"}
     ]
@@ -68,7 +61,7 @@ def oldest_action_item(items: list[dict[str, Any]]) -> str:
     if not action_items:
         return "none"
     oldest = min(action_items)
-    age = iso_now() - oldest
+    age = datetime.now(timezone.utc).replace(microsecond=0) - oldest
     hours = int(age.total_seconds() // 3600)
     minutes = int((age.total_seconds() % 3600) // 60)
     return f"{hours}h {minutes}m"
@@ -105,7 +98,7 @@ def generate_briefing(items: list[dict[str, Any]], ops_state: dict[str, Any], pe
     )
 
     lines = ["Email Briefing"]
-    period_end = iso_now()
+    period_end = datetime.now(timezone.utc).replace(microsecond=0)
     period_start = period_end - timedelta(hours=period_hours)
     lines.append(
         f"Period: {period_start.isoformat().replace('+00:00', 'Z')} -> {period_end.isoformat().replace('+00:00', 'Z')}"
@@ -157,18 +150,41 @@ def generate_briefing(items: list[dict[str, Any]], ops_state: dict[str, Any], pe
     return "\n".join(lines)
 
 
+def fetch_and_classify(args: argparse.Namespace) -> list[dict[str, Any]]:
+    categories = load_json(args.categories)
+    vip = load_json(args.vip)
+    messages = list_messages(
+        query=args.query or f"in:inbox newer_than:{max(1, args.hours // 24 or 1)}d",
+        max_results=args.max_results,
+        label_ids=["INBOX"],
+        unread_only=not args.include_read,
+    )
+    return [classify(item, categories, vip) for item in messages]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--emails-path", type=Path, required=True, help="Path to classified emails JSON.")
+    parser.add_argument("--emails-path", type=Path, help="Path to classified emails JSON.")
     parser.add_argument("--ops-state", type=Path, required=True, help="Path to workspace/ops-state.json.")
     parser.add_argument("--hours", type=int, default=24, help="Briefing lookback window.")
+    parser.add_argument("--categories", type=Path, help="Path to categories.json for live Gmail fetch mode.")
+    parser.add_argument("--vip", type=Path, help="Path to vip-senders.json for live Gmail fetch mode.")
+    parser.add_argument("--query", help="Optional Gmail search query override.")
+    parser.add_argument("--max-results", type=int, default=25, help="Max inbox messages to fetch in live mode.")
+    parser.add_argument("--include-read", action="store_true", help="Include read mail in live mode.")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    items = load_items(args.emails_path)
-    since = iso_now() - timedelta(hours=args.hours)
+    if args.emails_path:
+        items = load_items(args.emails_path)
+    else:
+        if not args.categories or not args.vip:
+            raise SystemExit("--categories and --vip are required when fetching inbox data via gws.")
+        items = fetch_and_classify(args)
+
+    since = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(hours=args.hours)
     filtered_items = filter_window(items, since)
     ops_state = load_json(args.ops_state)
     briefing = generate_briefing(filtered_items, ops_state, args.hours)

@@ -1,6 +1,6 @@
 ---
 name: calendar_ops
-description: Calendar management for OpsClaw using Google Calendar: morning schedule briefings, meeting prep generation, availability checks, conflict detection, and approval-gated event changes.
+description: Calendar management for OpsClaw using Google Calendar through the Google Workspace CLI (`gws`): morning schedule briefings, meeting prep generation, availability checks, conflict detection, and approval-gated event changes.
 ---
 
 # Calendar Operations Skill
@@ -14,7 +14,6 @@ Use this skill whenever the user asks to review the calendar, summarize a day or
    - `config/calendars.json`
    - `config/prep-rules.json`
 4. Use the bundled scripts for deterministic work:
-   - `scripts/gcal-auth.py`
    - `scripts/gcal-client.py`
    - `scripts/briefing.py`
    - `scripts/prep-generator.py`
@@ -39,7 +38,7 @@ Use this skill whenever the user asks to review the calendar, summarize a day or
 
 ## Morning Briefing Flow
 1. Read `config/calendars.json` to determine which calendars count toward the briefing.
-2. Use `scripts/gcal-client.py list-events` to fetch today's events across all monitored calendars.
+2. Use `scripts/gcal-client.py list-events` to fetch today's events across all monitored calendars through `gws calendar events list`.
 3. Run `scripts/gcal-client.py conflicts` on the same set.
 4. Run `scripts/briefing.py` to generate the owner-facing schedule briefing.
 5. Update `workspace/ops-state.json` with today's events, next meeting, prep status, and timestamps.
@@ -59,9 +58,9 @@ When a meeting starts within 30 minutes:
 2. Gather available context:
    - attendee details from the event itself
    - recent notes from workspace memory
-   - recent email thread summaries if `email-intel` is active
+   - recent email thread summaries via `gws gmail` if `email-intel` is active
    - client context if `crm-sync` is active
-3. Run `scripts/prep-generator.py`.
+3. Run `scripts/prep-generator.py`, which can fetch the event with `gws calendar` and recent inbox context with `gws gmail`.
 4. Save or deliver the prep document and mark the result in `workspace/ops-state.json.calendar.prepStatus`.
 5. If required context is missing, still generate a prep doc that clearly labels the missing sections rather than failing silently.
 
@@ -103,12 +102,13 @@ During heartbeat runs:
 - Never change or delete an event unless the approving instruction is clear and the target event is unambiguous.
 
 ## Reliability and Observability
-- Use `scripts/gcal-auth.py` to manage OAuth tokens instead of hand-editing credentials.
-- Use `scripts/gcal-client.py` for all Google Calendar API access.
+- Use `gws auth setup` / `gws auth login` for shared Google Workspace authentication instead of skill-specific OAuth helpers.
+- Use `scripts/gcal-client.py` for all `gws calendar` access.
+- Use `scripts/prep-generator.py` for cross-service context pulls from `gws calendar` and `gws gmail`.
 - Apply retry-with-backoff on transient API failures.
 - Log structured results with sanitized calendar and attendee data.
 - Capture exhausted failures in `workspace/memory/dead-letters/YYYY-MM-DD.json`.
-- If Google Calendar dependencies are missing, fail with an actionable install message.
+- If `gws` is missing or unauthenticated, fail with an actionable install/auth message.
 
 ## Setup and References
 - Human setup instructions live in `README.md`.

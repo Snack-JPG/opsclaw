@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Generate a daily schedule briefing from normalized calendar event data."""
+"""Generate a daily schedule briefing from normalized or live gws calendar data."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
@@ -13,13 +14,11 @@ from zoneinfo import ZoneInfo
 
 
 def load_json(path: Path) -> Any:
-    """Load JSON from disk."""
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
 def parse_iso_datetime(value: str) -> datetime:
-    """Parse ISO timestamps, defaulting to UTC when needed."""
     normalized = value.replace("Z", "+00:00")
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
@@ -28,13 +27,11 @@ def parse_iso_datetime(value: str) -> datetime:
 
 
 def format_local(dt: datetime, timezone_name: str) -> str:
-    """Format a datetime in the requested timezone."""
     zone = ZoneInfo(timezone_name)
     return dt.astimezone(zone).strftime("%H:%M")
 
 
 def load_events(path: Path) -> list[dict[str, Any]]:
-    """Load event collections from disk."""
     payload = load_json(path)
     if isinstance(payload, list):
         return payload
@@ -43,8 +40,21 @@ def load_events(path: Path) -> list[dict[str, Any]]:
     raise ValueError("Expected a JSON list or an object with an 'events' list.")
 
 
+def fetch_events(calendars_path: Path, window: str) -> list[dict[str, Any]]:
+    script_path = Path(__file__).with_name("gcal-client.py")
+    completed = subprocess.run(
+        [sys.executable, str(script_path), "list-events", "--calendars-path", str(calendars_path), "--window", window],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip() or "gcal-client failed")
+    payload = json.loads(completed.stdout)
+    return payload.get("events", [])
+
+
 def sort_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Order events by start and end time."""
     return sorted(
         events,
         key=lambda item: (
@@ -56,7 +66,6 @@ def sort_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def event_needs_prep(event: dict[str, Any], prep_rules: dict[str, Any]) -> bool:
-    """Apply a light-weight prep heuristic for the briefing."""
     defaults = prep_rules.get("defaults", {})
     if not defaults.get("enabled", True):
         return False
@@ -83,7 +92,6 @@ def event_needs_prep(event: dict[str, Any], prep_rules: dict[str, Any]) -> bool:
 
 
 def detect_conflicts(events: list[dict[str, Any]], minimum_buffer_minutes: int) -> list[str]:
-    """Detect overlaps and short buffers between adjacent events."""
     ordered = sort_events(events)
     warnings: list[str] = []
     minimum_buffer = timedelta(minutes=minimum_buffer_minutes)
@@ -93,9 +101,7 @@ def detect_conflicts(events: list[dict[str, Any]], minimum_buffer_minutes: int) 
         next_start = parse_iso_datetime(nxt["start"])
         if next_start < current_end:
             overlap_minutes = int((current_end - next_start).total_seconds() // 60)
-            warnings.append(
-                f"Conflict: '{current.get('summary')}' overlaps '{nxt.get('summary')}' by {overlap_minutes}m."
-            )
+            warnings.append(f"Conflict: '{current.get('summary')}' overlaps '{nxt.get('summary')}' by {overlap_minutes}m.")
             continue
 
         gap = next_start - current_end
@@ -112,7 +118,6 @@ def detect_conflicts(events: list[dict[str, Any]], minimum_buffer_minutes: int) 
 
 
 def compute_free_blocks(events: list[dict[str, Any]], timezone_name: str) -> list[str]:
-    """Identify material free blocks between events during the day."""
     ordered = sort_events(events)
     if not ordered:
         return ["Free all day."]
@@ -137,7 +142,6 @@ def compute_free_blocks(events: list[dict[str, Any]], timezone_name: str) -> lis
 
 
 def next_meeting(events: list[dict[str, Any]], reference: datetime | None = None) -> dict[str, Any] | None:
-    """Return the next meeting after the reference time."""
     now = reference or datetime.now(timezone.utc)
     for event in sort_events(events):
         if parse_iso_datetime(event["end"]) > now:
@@ -145,14 +149,7 @@ def next_meeting(events: list[dict[str, Any]], reference: datetime | None = None
     return None
 
 
-def generate_briefing(
-    events: list[dict[str, Any]],
-    ops_state: dict[str, Any],
-    prep_rules: dict[str, Any],
-    timezone_name: str,
-    minimum_buffer_minutes: int,
-) -> str:
-    """Render the morning schedule briefing."""
+def generate_briefing(events: list[dict[str, Any]], ops_state: dict[str, Any], prep_rules: dict[str, Any], timezone_name: str, minimum_buffer_minutes: int) -> str:
     ordered = sort_events(events)
     calendar_state = ops_state.get("calendar", {})
     prep_status = calendar_state.get("prepStatus", {})
@@ -173,15 +170,11 @@ def generate_briefing(
         end = format_local(parse_iso_datetime(event["end"]), timezone_name)
         prep_needed = event_needs_prep(event, prep_rules)
         prep_state = prep_status.get(event.get("id") or "", "pending" if prep_needed else "not_needed")
-        attendees = ", ".join(
-            attendee.get("displayName") or attendee.get("email") or "Unknown"
-            for attendee in event.get("attendees", [])[:3]
-        )
+        attendees = ", ".join(attendee.get("displayName") or attendee.get("email") or "Unknown" for attendee in event.get("attendees", [])[:3])
         attendee_suffix = f" | attendees: {attendees}" if attendees else ""
         location_suffix = f" | location: {event.get('location')}" if event.get("location") else ""
         lines.append(
-            f"- {start}-{end} {event.get('summary')} [{event.get('calendarLabel', event.get('calendarId', 'calendar'))}]"
-            f" | prep: {prep_state}{location_suffix}{attendee_suffix}"
+            f"- {start}-{end} {event.get('summary')} [{event.get('calendarLabel', event.get('calendarId', 'calendar'))}] | prep: {prep_state}{location_suffix}{attendee_suffix}"
         )
     lines.append("")
 
@@ -206,14 +199,14 @@ def generate_briefing(
         lines.append(f"- {starts} {upcoming.get('summary')} | prep: {prep_status.get(upcoming.get('id') or '', 'unknown')}")
     else:
         lines.append("- No remaining meetings.")
-
     return "\n".join(lines)
 
 
 def parse_args() -> argparse.Namespace:
-    """Build the CLI parser."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--events-path", type=Path, required=True, help="Path to normalized events JSON.")
+    parser.add_argument("--events-path", type=Path, help="Path to normalized events JSON.")
+    parser.add_argument("--calendars-path", type=Path, help="Path to calendars.json for live mode.")
+    parser.add_argument("--window", default="today", choices=["today", "tomorrow", "week"], help="Calendar window in live mode.")
     parser.add_argument("--ops-state", type=Path, required=True, help="Path to workspace/ops-state.json.")
     parser.add_argument("--prep-rules", type=Path, required=True, help="Path to prep-rules.json.")
     parser.add_argument("--timezone", default=None, help="Override timezone from prep or ops state.")
@@ -222,21 +215,19 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Entry point."""
     args = parse_args()
 
     try:
-        events = load_events(args.events_path)
+        if args.events_path:
+            events = load_events(args.events_path)
+        else:
+            if not args.calendars_path:
+                raise ValueError("--calendars-path is required when fetching live calendar data.")
+            events = fetch_events(args.calendars_path, args.window)
         ops_state = load_json(args.ops_state)
         prep_rules = load_json(args.prep_rules)
-        timezone_name = args.timezone or "UTC"
-        briefing = generate_briefing(
-            events=events,
-            ops_state=ops_state,
-            prep_rules=prep_rules,
-            timezone_name=timezone_name,
-            minimum_buffer_minutes=args.minimum_buffer_minutes,
-        )
+        timezone_name = args.timezone or load_json(args.calendars_path).get("timezone", "UTC") if args.calendars_path else args.timezone or "UTC"
+        briefing = generate_briefing(events, ops_state, prep_rules, timezone_name, args.minimum_buffer_minutes)
         sys.stdout.write(briefing + "\n")
     except Exception as exc:
         json.dump({"ok": False, "error": str(exc)}, sys.stdout, indent=2)

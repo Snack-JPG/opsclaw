@@ -2,7 +2,7 @@
 
 OpsClaw is a production-ready OpenClaw deployment package for founders and small teams who want an AI business operations assistant without building the stack from scratch. It packages workspace policy, multi-skill automation, client templates, setup tooling, and deployment guidance into a reusable system you can install, customise, and run in a few hours.
 
-It is designed for operators who need one agent to stay on top of inboxes, calendars, CRMs, task systems, and daily reporting while keeping risky actions approval-gated.
+It is designed for operators who need one agent to stay on top of inboxes, calendars, Drive docs, CRMs, task systems, and daily reporting while keeping risky actions approval-gated.
 
 ## Why OpsClaw
 
@@ -66,8 +66,9 @@ It is designed for operators who need one agent to stay on top of inboxes, calen
 
 ### Skills
 
-- `email-intel`: Gmail webhook intake, inbox classification, VIP escalation, brief generation, draft reply suggestions.
-- `calendar-ops`: Google Calendar auth, daily schedule briefings, conflict checks, availability checks, meeting prep generation.
+- `email-intel`: Gmail inbox fetch via `gws`, inbox classification, VIP escalation, brief generation, draft reply suggestions.
+- `calendar-ops`: Google Calendar reads and writes via `gws`, daily schedule briefings, conflict checks, availability checks, meeting prep generation.
+- `drive-docs`: Google Drive and Google Docs search, upload/download, creation, and update workflows via `gws`.
 - `crm-sync`: HubSpot or Pipedrive contact/deal lookup, notes, follow-up prioritisation, onboarding flows, health scoring.
 - `task-tracker`: Linear, Notion, or Asana task sync, natural-language task parsing, standups, weekly reports.
 - `ops-reporting`: unified daily brief, weekly review, KPI tracking, anomaly detection, channel-specific formatting.
@@ -133,11 +134,12 @@ docker compose up -d
 
 ## How It Runs
 
-1. `setup.sh` installs OpenClaw if needed and copies workspace, docs, scripts, templates, and skills into `~/.openclaw/`.
+1. `setup.sh` installs OpenClaw and the Google Workspace CLI (`gws`) if needed, then copies workspace, docs, scripts, templates, and skills into `~/.openclaw/`.
 2. `config-wizard.sh` generates a baseline `workspace/config.json5` and personalises `workspace/USER.md`.
-3. Skills are enabled per template or per deployment.
-4. Hooks, scheduled jobs, and heartbeat checks drive ongoing monitoring and briefing generation.
-5. High-risk actions are queued for approval instead of executed automatically.
+3. `gws auth setup --login` provisions shared Google Workspace auth for Gmail, Calendar, Drive, and Docs skills.
+4. Skills are enabled per template or per deployment.
+5. Hooks, scheduled jobs, and heartbeat checks drive ongoing monitoring and briefing generation.
+6. High-risk actions are queued for approval instead of executed automatically.
 
 ## Screenshots
 
@@ -156,8 +158,8 @@ Add polished captures here before publishing a public showcase. Recommended set:
 | --- | --- |
 | Runtime | OpenClaw, Node.js 20+, npm |
 | Automation scripts | Bash, Python 3 |
-| Messaging and hooks | OpenClaw Gateway, webhooks, Gmail Pub/Sub |
-| Calendar | Google Calendar API |
+| Messaging and hooks | OpenClaw Gateway, webhooks, Gmail / Calendar / Drive / Docs via `gws` |
+| Google Workspace | Google Workspace CLI (`gws`) for Gmail, Calendar, Drive, Docs |
 | CRM | HubSpot API, Pipedrive API |
 | Task systems | Linear GraphQL API, Notion API, Asana API |
 | Reporting | Markdown, plain text, Slack blocks, Telegram-friendly output |
@@ -167,8 +169,9 @@ Add polished captures here before publishing a public showcase. Recommended set:
 
 | Integration | Purpose | Status |
 | --- | --- | --- |
-| Gmail | Inbox change notifications, classification, draft workflows | Implemented |
-| Google Calendar | Scheduling, availability, prep, briefing | Implemented |
+| Gmail via `gws` | Inbox fetch, classification, draft workflows | Implemented |
+| Google Calendar via `gws` | Scheduling, availability, prep, briefing | Implemented |
+| Google Drive / Docs via `gws` | File search, upload/download, doc creation and updates | Implemented |
 | HubSpot | Contact and deal lookup, notes, follow-up workflows | Implemented |
 | Pipedrive | CRM lookup, notes, onboarding, follow-up workflows | Implemented |
 | Linear | Issue and task operations | Implemented |

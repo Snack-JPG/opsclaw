@@ -1,58 +1,43 @@
 # Calendar Operations Skill
 
-This skill adds Google Calendar-backed scheduling, daily briefings, meeting prep generation, availability checks, and approval-gated calendar changes to OpsClaw.
+This skill adds Google Calendar-backed scheduling, daily briefings, meeting prep generation, availability checks, and approval-gated calendar changes to OpsClaw through the Google Workspace CLI (`gws`).
 
 ## Files
 - `SKILL.md`: agent operating instructions
-- `scripts/gcal-auth.py`: OAuth2 bootstrap, refresh, and token inspection
-- `scripts/gcal-client.py`: Google Calendar client and CLI for read/write operations
+- `scripts/gcal-client.py`: `gws`-backed Google Calendar client and CLI for read/write operations
 - `scripts/briefing.py`: owner-facing schedule briefing generator
-- `scripts/prep-generator.py`: meeting prep generator
+- `scripts/prep-generator.py`: meeting prep generator using calendar plus Gmail context
 - `config/calendars.json`: monitored calendar list and scheduling defaults
 - `config/prep-rules.json`: prep-generation policy and heuristics
 
 ## Prerequisites
 - A Google account with Google Calendar access
-- A Google Cloud project you can administer
-- OAuth client credentials for a desktop app or installed app flow
+- `gws` installed and authenticated
 - `python3` installed locally
-- These Python packages installed:
-
-```bash
-python3 -m pip install google-api-python-client google-auth google-auth-oauthlib
-```
 
 ## Quick Start
-1. Create a Google Cloud project or reuse an existing one.
-2. Enable the Google Calendar API.
-3. Create an OAuth client credential for a desktop app.
-4. Download the JSON credential file.
-5. Run:
+1. Run:
 
 ```bash
-python3 skills/calendar-ops/scripts/gcal-auth.py auth \
-  --credentials /path/to/client-secret.json \
-  --token-path skills/calendar-ops/config/google-token.json
+gws auth setup --login
 ```
 
-6. Inspect token status:
+2. Inspect auth status:
 
 ```bash
-python3 skills/calendar-ops/scripts/gcal-auth.py status \
-  --token-path skills/calendar-ops/config/google-token.json
+gws auth status
 ```
 
-7. Configure calendars:
+3. Configure calendars:
 
 ```bash
 $EDITOR skills/calendar-ops/config/calendars.json
 ```
 
-8. Test connectivity:
+4. Test connectivity:
 
 ```bash
 python3 skills/calendar-ops/scripts/gcal-client.py list-events \
-  --token-path skills/calendar-ops/config/google-token.json \
   --calendars-path skills/calendar-ops/config/calendars.json \
   --window today
 ```
@@ -90,7 +75,6 @@ Add or merge jobs like:
 ### List Events
 ```bash
 python3 skills/calendar-ops/scripts/gcal-client.py list-events \
-  --token-path skills/calendar-ops/config/google-token.json \
   --calendars-path skills/calendar-ops/config/calendars.json \
   --window today
 ```
@@ -98,7 +82,6 @@ python3 skills/calendar-ops/scripts/gcal-client.py list-events \
 ### Check Availability
 ```bash
 python3 skills/calendar-ops/scripts/gcal-client.py availability \
-  --token-path skills/calendar-ops/config/google-token.json \
   --calendars-path skills/calendar-ops/config/calendars.json \
   --start 2026-03-20T15:00:00+00:00 \
   --end 2026-03-20T16:00:00+00:00
@@ -113,7 +96,7 @@ python3 skills/calendar-ops/scripts/gcal-client.py conflicts \
 ### Generate a Briefing
 ```bash
 python3 skills/calendar-ops/scripts/briefing.py \
-  --events-path /tmp/events.json \
+  --calendars-path skills/calendar-ops/config/calendars.json \
   --ops-state workspace/ops-state.json \
   --prep-rules skills/calendar-ops/config/prep-rules.json
 ```
@@ -121,9 +104,10 @@ python3 skills/calendar-ops/scripts/briefing.py \
 ### Generate Meeting Prep
 ```bash
 python3 skills/calendar-ops/scripts/prep-generator.py \
-  --event-path /tmp/event.json \
+  --calendars-path skills/calendar-ops/config/calendars.json \
+  --calendar-id primary \
+  --event-id YOUR_EVENT_ID \
   --prep-rules skills/calendar-ops/config/prep-rules.json \
-  --recent-interactions /tmp/interactions.json \
   --attendee-context /tmp/attendees.json \
   --crm-context /tmp/crm.json
 ```
@@ -144,7 +128,7 @@ python3 skills/calendar-ops/scripts/prep-generator.py \
 - Read operations run immediately.
 - Event changes must be queued for explicit owner approval before execution.
 - Conflicts should be surfaced in both heartbeat checks and the morning briefing.
-- Missing Google libraries or expired credentials should be treated as degraded-service conditions, not silent failures.
+- Failed `gws auth status` checks should be treated as degraded-service conditions, not silent failures.
 
 ## Verification Checklist
 - Fetch today's events and confirm times match Google Calendar.

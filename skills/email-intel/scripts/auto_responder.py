@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate template-based drafts and approval queue entries for email responses."""
+"""Generate approval-safe Gmail drafts using gws."""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+from gws_gmail import create_draft, get_message, iso_now, send_draft
 
 
 URGENCY_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
@@ -24,10 +26,6 @@ def save_json(path: Path, payload: Any) -> None:
     with path.open("w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)
         handle.write("\n")
-
-
-def iso_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def read_template(path: Path) -> str:
@@ -196,20 +194,54 @@ def update_ops_state(ops_state: dict[str, Any], entry: dict[str, Any], email_doc
     ops_state.setdefault("email", {})["lastChecked"] = iso_now()
 
 
+def target_recipients(email_doc: dict[str, Any]) -> list[str]:
+    sender = email_doc.get("from", {})
+    address = sender.get("email")
+    return [address] if address else []
+
+
+def maybe_sync_gmail_draft(email_doc: dict[str, Any], draft: dict[str, Any], *, send_now: bool) -> dict[str, Any] | None:
+    recipients = target_recipients(email_doc)
+    if not recipients:
+        return None
+
+    created = create_draft(
+        to=recipients,
+        subject=f"Re: {email_doc.get('subject') or '(no subject)'}",
+        body=draft["body"],
+        thread_id=email_doc.get("threadId"),
+    )
+    result = {"draftId": created.get("id"), "message": created.get("message")}
+    if send_now and created.get("id"):
+        result["sent"] = send_draft(created["id"])
+    return result
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--email-path", type=Path, required=True, help="Path to a classified email JSON file.")
+    parser.add_argument("--email-path", type=Path, help="Path to a classified email JSON file.")
+    parser.add_argument("--message-id", help="Fetch a Gmail message via gws before generating the draft.")
     parser.add_argument("--rules", type=Path, required=True, help="Path to rules.json.")
     parser.add_argument("--templates-dir", type=Path, required=True, help="Directory of response templates.")
     parser.add_argument("--ops-state", type=Path, required=True, help="Path to workspace/ops-state.json.")
     parser.add_argument("--owner-name", default="Owner", help="Displayed sender name for drafts.")
     parser.add_argument("--write-state", action="store_true", help="Persist queue changes into ops-state.json.")
+    parser.add_argument("--skip-gmail-draft", action="store_true", help="Do not create a Gmail draft via gws.")
+    parser.add_argument("--send", action="store_true", help="Send the created Gmail draft immediately.")
     return parser.parse_args()
+
+
+def load_email(args: argparse.Namespace) -> dict[str, Any]:
+    if args.email_path is not None:
+        return load_json(args.email_path)
+    if args.message_id:
+        return get_message(args.message_id)
+    return json.load(sys.stdin)
 
 
 def main() -> int:
     args = parse_args()
-    email_doc = load_json(args.email_path)
+    email_doc = load_email(args)
     rules_doc = load_json(args.rules)
     rule = choose_rule(email_doc, rules_doc)
     if rule is None:
@@ -219,13 +251,22 @@ def main() -> int:
 
     draft = build_draft(email_doc, rule, args.templates_dir, args.owner_name)
     approval = queue_entry(email_doc, draft, rule)
+    gmail_draft = None
+    if not args.skip_gmail_draft:
+        gmail_draft = maybe_sync_gmail_draft(email_doc, draft, send_now=args.send)
+        if gmail_draft:
+            approval["gmailDraft"] = gmail_draft
 
     if args.write_state:
         ops_state = load_json(args.ops_state)
         update_ops_state(ops_state, approval, email_doc)
         save_json(args.ops_state, ops_state)
 
-    json.dump({"matched": True, "rule": rule["id"], "draft": draft, "approval": approval}, sys.stdout, indent=2)
+    json.dump(
+        {"matched": True, "rule": rule["id"], "draft": draft, "approval": approval, "gmailDraft": gmail_draft},
+        sys.stdout,
+        indent=2,
+    )
     sys.stdout.write("\n")
     return 0
 

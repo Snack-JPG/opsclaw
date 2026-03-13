@@ -41,6 +41,13 @@ else
   echo "OpenClaw already available at $(command -v openclaw)"
 fi
 
+if ! command -v gws >/dev/null 2>&1; then
+  echo "Installing Google Workspace CLI globally via npm..."
+  npm i -g @googleworkspace/cli
+else
+  echo "Google Workspace CLI already available at $(command -v gws)"
+fi
+
 mkdir -p "${TARGET_WORKSPACE}" "${TARGET_SUPPORT}"
 mkdir -p "${TARGET_WORKSPACE}/memory/dead-letters"
 
@@ -64,7 +71,8 @@ echo "Support assets installed to ${TARGET_SUPPORT}"
 echo
 echo "Next steps:"
 echo "  1. Run ${ROOT_DIR}/config-wizard.sh"
-echo "  2. Add secrets to ${TARGET_SUPPORT}/.env or your secret manager"
-echo "  3. Run ${ROOT_DIR}/scripts/health-check.sh"
-echo "  4. Run openclaw security audit --deep"
-echo "  5. Start with openclaw gateway start"
+echo "  2. Run gws auth setup --login"
+echo "  3. Add secrets to ${TARGET_SUPPORT}/.env or your secret manager"
+echo "  4. Run ${ROOT_DIR}/scripts/health-check.sh"
+echo "  5. Run openclaw security audit --deep"
+echo "  6. Start with openclaw gateway start"

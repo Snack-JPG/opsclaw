@@ -6,8 +6,9 @@ OpsClaw ships with a provider-oriented integration layer so the same operating m
 
 | Integration | Skill | Auth model | Read/Write profile |
 | --- | --- | --- | --- |
-| Gmail | `email-intel` | Google Cloud + Gmail API + Pub/Sub | Reads messages and drafts responses; sending remains approval-gated |
-| Google Calendar | `calendar-ops` | OAuth 2.0 desktop or installed-app flow | Reads events and availability; event changes require approval |
+| Gmail | `email-intel` | Google Workspace CLI (`gws`) shared auth | Reads messages and drafts responses; sending remains approval-gated |
+| Google Calendar | `calendar-ops` | Google Workspace CLI (`gws`) shared auth | Reads events and availability; event changes require approval |
+| Google Drive / Docs | `drive-docs` | Google Workspace CLI (`gws`) shared auth | Reads and updates files/docs; external edits should remain approval-gated |
 | HubSpot | `crm-sync` | Private app token | Reads CRM objects and can add notes; deal changes require approval |
 | Pipedrive | `crm-sync` | API token | Reads CRM objects and can add notes; deal changes require approval |
 | Linear | `task-tracker` | Personal API key | Reads and writes issues/tasks |
@@ -26,21 +27,19 @@ OpsClaw ships with a provider-oriented integration layer so the same operating m
 
 ### Setup path
 
-Use [skills/email-intel/scripts/gmail-setup.sh](/Users/austin/Desktop/opsclaw/skills/email-intel/scripts/gmail-setup.sh) to bootstrap the Google Cloud and Pub/Sub side of the integration.
+Run `gws auth setup --login`, then use [gws-auth-setup.sh](/Users/austin/Desktop/opsclaw/skills/email-intel/scripts/gws-auth-setup.sh) if you want a repo-local wrapper around the same auth flow.
 
 ### Authentication and components
 
-- Google Cloud project
-- Gmail API enabled
-- Pub/Sub topic and push subscription
-- Gmail watch registration
-- OpenClaw hook preset for `gmail`
+- Shared `gws` auth state
+- Gmail API access through `gws gmail`
+- Optional OpenClaw polling or hook workflow, depending on deployment
 
 ### Notes
 
-- This integration is event-driven.
+- This integration is `gws`-driven.
 - Draft creation is allowed; message sending should remain approval-gated.
-- Watch registrations can expire and should be monitored.
+- If you add webhook or watch infrastructure around Gmail, monitor it separately from `gws` auth health.
 
 ## Google Calendar
 
@@ -53,18 +52,38 @@ Use [skills/email-intel/scripts/gmail-setup.sh](/Users/austin/Desktop/opsclaw/sk
 
 ### Setup path
 
-Use the auth helper in [skills/calendar-ops/scripts/gcal-auth.py](/Users/austin/Desktop/opsclaw/skills/calendar-ops/scripts/gcal-auth.py), then test read operations with [skills/calendar-ops/scripts/gcal-client.py](/Users/austin/Desktop/opsclaw/skills/calendar-ops/scripts/gcal-client.py).
+Run `gws auth setup --login`, then test read operations with [skills/calendar-ops/scripts/gcal-client.py](/Users/austin/Desktop/opsclaw/skills/calendar-ops/scripts/gcal-client.py).
 
 ### Authentication
 
-- OAuth 2.0 client credentials
-- refresh token stored locally in config
+- Shared `gws` auth state managed by `gws auth`
 
 ### Notes
 
 - Read operations are safe by default.
 - Calendar modifications should remain explicitly approval-gated.
-- Expired tokens should be treated as degraded service, not silent failure.
+- Failed `gws auth status` should be treated as degraded service, not silent failure.
+
+## Google Drive / Docs
+
+### Purpose
+
+- search Drive folders and shared docs
+- download or upload files
+- create Google Docs
+- read or update document content
+
+### Setup path
+
+Run `gws auth setup --login`, then use:
+
+- [skills/drive-docs/scripts/drive-client.py](/Users/austin/Desktop/opsclaw/skills/drive-docs/scripts/drive-client.py)
+- [skills/drive-docs/scripts/docs-client.py](/Users/austin/Desktop/opsclaw/skills/drive-docs/scripts/docs-client.py)
+
+### Notes
+
+- Treat shared document edits as approval-gated unless the user was explicit.
+- Keep monitored folder IDs in [drive-config.json](/Users/austin/Desktop/opsclaw/skills/drive-docs/config/drive-config.json).
 
 ## HubSpot
 
