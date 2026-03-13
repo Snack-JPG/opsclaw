@@ -203,6 +203,47 @@ See [docs/api-integrations.md](docs/api-integrations.md) for setup expectations,
 | `saas-founder.json5` | Founder-led SaaS team | Slack, full stack, escalation keywords |
 | `professional-services.json5` | Legal, accounting, advisory | Approval-heavy, compliance-minded defaults |
 
+## Role Packs
+
+OpsClaw now supports a multi-agent deployment model built around role packs. A role pack is a prebuilt operating profile that defines:
+
+- which skills are enabled for a role
+- role-specific persona and heartbeat instructions
+- briefing cadence and channel preferences
+- approval policy overrides and example commands
+- skill config overrides for that role's workflows
+
+Built-in role packs live under `role-packs/`:
+
+- `founder.json`
+- `sales.json`
+- `support.json`
+- `admin.json`
+- `finance.json`
+- `marketing.json`
+
+Use `scripts/deploy-role.py` for a single role workspace:
+
+```bash
+python3 scripts/deploy-role.py \
+  --role founder \
+  --company "Acme Corp" \
+  --user "Jane Smith" \
+  --channel telegram \
+  --crm hubspot \
+  --output ./deployments/acme-founder
+```
+
+Use `scripts/deploy-company.py` for a shared multi-role company setup:
+
+```bash
+python3 scripts/deploy-company.py \
+  --config templates/company-config.json \
+  --output ./deployments/acme
+```
+
+This generates separate role workspaces, shared client state, channel routing metadata, and a multi-agent `docker-compose.yml`.
+
 ## Pricing Tiers
 
 | Tier | Price | Best for | Includes |
@@ -233,6 +274,7 @@ opsclaw/
 - [docs/setup-guide.md](docs/setup-guide.md)
 - [docs/security-guide.md](docs/security-guide.md)
 - [docs/skill-customisation.md](docs/skill-customisation.md)
+- [docs/role-packs.md](docs/role-packs.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/api-integrations.md](docs/api-integrations.md)
 - [DEMO.md](DEMO.md)

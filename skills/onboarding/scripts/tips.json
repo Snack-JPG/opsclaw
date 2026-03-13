@@ -1,0 +1,154 @@
+{
+  "briefings": {
+    "title": "Morning briefings",
+    "body": "The morning briefing is your fastest way to see priorities, risks, and what needs a decision.",
+    "examples": [
+      "Give me my morning briefing.",
+      "What should I care about first today?"
+    ]
+  },
+  "approvals": {
+    "title": "Approval boundaries",
+    "body": "The agent can gather context and prepare drafts, but external sends and risky writes stay approval-gated.",
+    "examples": [
+      "Show me anything waiting for approval.",
+      "Draft the reply first."
+    ]
+  },
+  "asking_for_help": {
+    "title": "How to ask",
+    "body": "Short, direct commands work best. Name the outcome you want and the system involved.",
+    "examples": [
+      "Check my inbox for anything urgent.",
+      "Prep me for my next meeting."
+    ]
+  },
+  "crm_lookup": {
+    "title": "CRM lookups",
+    "body": "You can ask for account history, follow-ups, and pipeline risk using client or company names.",
+    "examples": [
+      "Look up Acme Corp in the CRM.",
+      "Which follow-ups are overdue?"
+    ]
+  },
+  "email_drafts": {
+    "title": "Email drafting",
+    "body": "The agent can classify mail, summarise intent, and prepare a reply draft for you to approve.",
+    "examples": [
+      "Draft a reply to Sarah about the contract.",
+      "Summarise the urgent emails and suggest replies."
+    ]
+  },
+  "meeting_prep": {
+    "title": "Meeting prep",
+    "body": "Ask for prep any time you want attendees, context, risks, and open questions before a meeting.",
+    "examples": [
+      "Prep me for my next meeting.",
+      "What do I need to know before the 2pm call?"
+    ]
+  },
+  "weekly_review": {
+    "title": "Weekly review",
+    "body": "The weekly review pulls together wins, risks, blocked items, and patterns from the week.",
+    "examples": [
+      "Generate my weekly review.",
+      "What should I expect in Friday's review?"
+    ]
+  },
+  "feedback": {
+    "title": "Feedback loop",
+    "body": "By the end of week one, ask what feels noisy, missing, or over-alerted so the agent can be tuned.",
+    "examples": [
+      "What should we change about the briefings?",
+      "Here are the alerts I want less of."
+    ]
+  },
+  "anomaly_detection": {
+    "title": "Anomaly detection",
+    "body": "Founder and reporting-heavy roles can ask for KPI anomalies instead of scanning raw dashboards.",
+    "examples": [
+      "Show me KPI anomalies from this week.",
+      "What changed unexpectedly?"
+    ]
+  },
+  "pipeline_focus": {
+    "title": "Pipeline focus",
+    "body": "Sales-oriented roles should ask for deals likely to slip, missing next steps, and overdue follow-ups.",
+    "examples": [
+      "What deals are at risk?",
+      "Which opportunities need a next step?"
+    ]
+  },
+  "follow_up_commands": {
+    "title": "Follow-up commands",
+    "body": "Use the agent to turn stale conversations into clean follow-up drafts and task queues.",
+    "examples": [
+      "Draft a follow-up for silent prospects.",
+      "Queue today's follow-ups."
+    ]
+  },
+  "sla_tracking": {
+    "title": "SLA tracking",
+    "body": "Support roles can ask for tickets close to breach and queues ordered by urgency.",
+    "examples": [
+      "Which tickets are near SLA breach?",
+      "Triage the support queue."
+    ]
+  },
+  "client_history": {
+    "title": "Client history",
+    "body": "Before replying to escalations, ask for recent incidents, promises, and account context.",
+    "examples": [
+      "Pull the history for this client.",
+      "What happened on this account recently?"
+    ]
+  },
+  "document_chasing": {
+    "title": "Document chasing",
+    "body": "Admin and finance roles can ask for missing documents, owners, and the next nudge to send.",
+    "examples": [
+      "What documents are still missing?",
+      "Draft a chase for the unsigned form."
+    ]
+  },
+  "scheduling": {
+    "title": "Scheduling",
+    "body": "Admin roles can use the agent to spot conflicts, missing prep, and calendar overload.",
+    "examples": [
+      "Check for calendar conflicts this week.",
+      "Who needs prep before today's meetings?"
+    ]
+  },
+  "finance_docs": {
+    "title": "Finance documents",
+    "body": "Finance roles should use the agent to track missing receipts, invoices, and contract support files.",
+    "examples": [
+      "What finance documents are missing?",
+      "Show me invoice follow-ups due today."
+    ]
+  },
+  "revenue_reporting": {
+    "title": "Revenue reporting",
+    "body": "Finance roles can request concise reporting snapshots instead of raw exports.",
+    "examples": [
+      "Give me a revenue snapshot.",
+      "Summarise collection risk this week."
+    ]
+  },
+  "campaign_kpis": {
+    "title": "Campaign KPIs",
+    "body": "Marketing roles can ask for KPI changes, launch blockers, and content deadlines in one view.",
+    "examples": [
+      "Give me today's marketing brief.",
+      "What campaign metrics changed this week?"
+    ]
+  },
+  "lead_scoring": {
+    "title": "Lead scoring",
+    "body": "Marketing roles can ask for lead-quality shifts and handoff issues before they hit sales.",
+    "examples": [
+      "Summarise lead score changes.",
+      "Which leads need better follow-up?"
+    ]
+  }
+}

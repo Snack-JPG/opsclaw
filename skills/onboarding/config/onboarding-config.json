@@ -1,0 +1,60 @@
+{
+  "defaults": {
+    "days": {
+      "0": {
+        "headline": "Welcome",
+        "tips": ["briefings", "approvals"]
+      },
+      "1": {
+        "headline": "Morning briefing check-in",
+        "tips": ["briefings", "asking_for_help"]
+      },
+      "2": {
+        "headline": "CRM coaching",
+        "tips": ["crm_lookup"]
+      },
+      "3": {
+        "headline": "Email coaching",
+        "tips": ["email_drafts"]
+      },
+      "4": {
+        "headline": "Calendar coaching",
+        "tips": ["meeting_prep"]
+      },
+      "5": {
+        "headline": "Weekly review expectation",
+        "tips": ["weekly_review"]
+      },
+      "7": {
+        "headline": "First review and feedback",
+        "tips": ["weekly_review", "feedback"]
+      }
+    }
+  },
+  "roles": {
+    "founder": {
+      "extra_tips": ["anomaly_detection", "pipeline_focus"],
+      "disabled_tips": []
+    },
+    "sales": {
+      "extra_tips": ["pipeline_focus", "follow_up_commands"],
+      "disabled_tips": []
+    },
+    "support": {
+      "extra_tips": ["sla_tracking", "client_history"],
+      "disabled_tips": ["meeting_prep"]
+    },
+    "admin": {
+      "extra_tips": ["document_chasing", "scheduling"],
+      "disabled_tips": ["crm_lookup"]
+    },
+    "finance": {
+      "extra_tips": ["finance_docs", "revenue_reporting"],
+      "disabled_tips": ["meeting_prep"]
+    },
+    "marketing": {
+      "extra_tips": ["campaign_kpis", "lead_scoring"],
+      "disabled_tips": []
+    }
+  }
+}

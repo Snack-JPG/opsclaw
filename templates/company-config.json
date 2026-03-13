@@ -1,0 +1,35 @@
+{
+  "company": {
+    "name": "Acme Corp",
+    "timezone": "Europe/London",
+    "owner": "Jane Smith",
+    "deployment_mode": "docker-compose"
+  },
+  "shared": {
+    "crm": "hubspot",
+    "channels": {
+      "primary": "telegram",
+      "enabled": ["telegram", "email", "slack"]
+    }
+  },
+  "roles": [
+    {
+      "role": "founder",
+      "user": "Jane Smith",
+      "channel": "telegram",
+      "briefing_channel": "telegram"
+    },
+    {
+      "role": "sales",
+      "user": "Alex Mercer",
+      "channel": "telegram",
+      "briefing_channel": "telegram"
+    },
+    {
+      "role": "support",
+      "user": "Casey Rowan",
+      "channel": "slack",
+      "briefing_channel": "slack"
+    }
+  ]
+}
