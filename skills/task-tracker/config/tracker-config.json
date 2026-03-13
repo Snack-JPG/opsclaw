@@ -1,0 +1,69 @@
+{
+  "provider": "linear",
+  "timezone": "Europe/London",
+  "retry": {
+    "maxRetries": 3,
+    "baseDelaySeconds": 1.0,
+    "maxDelaySeconds": 20.0,
+    "jitterSeconds": 0.5
+  },
+  "deadlineTracking": {
+    "lookaheadDays": 7,
+    "escalateOverdueAfterDays": 1,
+    "escalateBlockedAfterDays": 2,
+    "requireAssignee": false
+  },
+  "standup": {
+    "runHourLocal": 8,
+    "runMinuteLocal": 30
+  },
+  "reports": {
+    "weeklyRunWeekday": "friday",
+    "weeklyRunHourLocal": 16,
+    "velocityWindowWeeks": 4
+  },
+  "linear": {
+    "baseUrl": "https://api.linear.app/graphql",
+    "tokenEnv": "LINEAR_API_KEY",
+    "teamId": "",
+    "defaultProjectId": "",
+    "defaultStateId": "",
+    "blockedStateName": "Blocked",
+    "doneStateNames": [
+      "Done",
+      "Canceled"
+    ]
+  },
+  "notion": {
+    "baseUrl": "https://api.notion.com/v1",
+    "tokenEnv": "NOTION_API_TOKEN",
+    "version": "2022-06-28",
+    "databaseId": "",
+    "properties": {
+      "title": "Name",
+      "status": "Status",
+      "dueDate": "Due",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "project": "Project",
+      "labels": "Tags",
+      "blockReason": "Block Reason"
+    },
+    "doneStatuses": [
+      "Done",
+      "Complete"
+    ],
+    "blockedStatuses": [
+      "Blocked"
+    ]
+  },
+  "asana": {
+    "baseUrl": "https://app.asana.com/api/1.0",
+    "tokenEnv": "ASANA_ACCESS_TOKEN",
+    "workspaceGid": "",
+    "projectGid": "",
+    "defaultSectionGid": "",
+    "blockedSectionGid": "",
+    "doneSectionGid": ""
+  }
+}
