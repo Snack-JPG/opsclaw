@@ -120,8 +120,9 @@ textarea:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 16px;
-  margin: 16px 20px 0;
+  padding: 10px 14px;
+  margin: 16px auto 0;
+  width: min(920px, calc(100% - 32px));
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
   background: color-mix(in srgb, var(--surface-strong) 78%, var(--secondary) 22%);
@@ -130,11 +131,16 @@ textarea:focus-visible {
 }
 
 .demo-banner-dismiss {
-  padding: 8px 12px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text);
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .glass {
@@ -173,9 +179,9 @@ textarea:focus-visible {
 }
 
 .brand-mark {
-  width: 54px;
-  height: 54px;
-  border-radius: 18px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
   display: grid;
   place-items: center;
   color: #fff;
@@ -208,7 +214,7 @@ textarea:focus-visible {
 }
 
 .brand-label strong,
-.hero-title,
+.landing-title,
 .section-title,
 .chat-title,
 .role-name,
@@ -262,49 +268,10 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
-.landing {
-  display: grid;
-  grid-template-columns: minmax(320px, 0.96fr) minmax(480px, 1.04fr);
-  gap: 24px;
-  padding: 24px;
-}
-
-.landing-panel,
-.landing-stage,
+.landing-card,
 .sidebar,
 .chat-shell {
   border-radius: var(--radius-xl);
-}
-
-.landing-panel {
-  padding: 28px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.landing-panel::after,
-.landing-stage::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.landing-panel::after {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.14), transparent 34%),
-    radial-gradient(circle at 10% 15%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 32%);
-}
-
-.landing-hero {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 22px;
-  max-width: 34rem;
 }
 
 .eyebrow {
@@ -314,45 +281,10 @@ textarea:focus-visible {
   font-weight: 700;
 }
 
-.hero-title {
-  font-size: clamp(2.9rem, 6vw, 5.4rem);
-  line-height: 0.95;
-}
-
 .landing-body {
   margin: 0;
-  font-size: 1.04rem;
-  line-height: 1.75;
-}
-
-.hero-metrics {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.metric {
-  min-width: 132px;
-  padding: 15px 16px;
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--border));
-  background: color-mix(in srgb, var(--surface-strong) 70%, transparent);
-}
-
-.metric strong {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-}
-
-.landing-footer {
-  position: relative;
-  z-index: 1;
-  margin-top: 26px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: end;
+  font-size: 1rem;
+  line-height: 1.7;
 }
 
 .status-pill {
@@ -373,29 +305,67 @@ textarea:focus-visible {
   box-shadow: 0 0 0 6px color-mix(in srgb, #31c48d 14%, transparent);
 }
 
-.landing-stage {
-  position: relative;
-  overflow: hidden;
-  padding: 30px;
+.landing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
 }
 
-.landing-stage::before {
+.landing-shell {
+  width: min(920px, 100%);
+  display: grid;
+  gap: 22px;
+}
+
+.landing-topbar,
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.landing-card {
+  position: relative;
+  overflow: hidden;
+  padding: 34px;
+}
+
+.landing-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   background:
     radial-gradient(circle at 80% 18%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 24%),
     radial-gradient(circle at 18% 84%, color-mix(in srgb, var(--secondary) 82%, transparent), transparent 28%);
 }
 
-.landing-stage-head {
+.landing-header {
   position: relative;
   z-index: 1;
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  align-items: start;
+  display: grid;
+  gap: 10px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .section-title {
   font-size: clamp(1.8rem, 3vw, 2.8rem);
+}
+
+.landing-title {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1;
+}
+
+.landing-subtitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .role-grid {
@@ -403,21 +373,22 @@ textarea:focus-visible {
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .role-card {
   text-align: left;
   border-radius: 24px;
-  min-height: 194px;
   border: 1px solid var(--border);
-  padding: 18px;
+  padding: 20px;
   background:
-    linear-gradient(160deg, color-mix(in srgb, var(--surface-strong) 88%, transparent), color-mix(in srgb, var(--secondary) 54%, transparent));
+    linear-gradient(160deg, color-mix(in srgb, var(--surface-strong) 92%, transparent), color-mix(in srgb, var(--secondary) 46%, transparent));
   box-shadow: var(--shadow-sm);
   display: grid;
-  gap: 12px;
+  gap: 18px;
+  align-content: space-between;
 }
 
 .role-card:hover,
@@ -425,6 +396,7 @@ textarea:focus-visible {
 .mobile-role-button:hover {
   transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
+  box-shadow: var(--shadow-md);
 }
 
 .role-card.is-active,
@@ -447,8 +419,41 @@ textarea:focus-visible {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
+.role-card .role-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  font-size: 2rem;
+}
+
+.role-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.role-card-body {
+  display: grid;
+  gap: 8px;
+}
+
+.role-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #31c48d 26%, var(--border));
+  background: color-mix(in srgb, #31c48d 10%, var(--surface-strong));
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 .role-name {
-  font-size: 1.05rem;
+  font-size: 1.12rem;
+  font-weight: 700;
 }
 
 .role-copy {
@@ -456,29 +461,14 @@ textarea:focus-visible {
   line-height: 1.56;
 }
 
-.role-greeting {
-  margin: 0;
-  font-size: 0.94rem;
-  line-height: 1.5;
-}
-
 .auth-panel {
   position: relative;
   z-index: 1;
-  margin-top: 24px;
-  border-radius: 26px;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
-  box-shadow: var(--shadow-sm);
-  padding: 22px;
+  margin-top: 28px;
   display: grid;
-  gap: 14px;
-}
-
-.input-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
+  align-items: stretch;
 }
 
 .field {
@@ -492,15 +482,37 @@ textarea:focus-visible {
   color: var(--muted);
 }
 
+.field-inline {
+  min-width: 0;
+}
+
 .field input,
 .composer textarea {
   width: 100%;
-  padding: 15px 16px;
+  padding: 0 16px;
+  min-height: 56px;
   border-radius: 18px;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
   color: var(--text);
   transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.auth-button {
+  min-height: 56px;
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .field input::placeholder,
@@ -778,6 +790,7 @@ textarea:focus-visible {
 }
 
 .composer textarea {
+  padding: 15px 16px;
   min-height: 58px;
   max-height: 180px;
   resize: vertical;
@@ -867,7 +880,7 @@ textarea:focus-visible {
 
 @media (max-width: 1080px) {
   .landing {
-    grid-template-columns: 1fr;
+    padding: 24px 16px;
   }
 
   .app-shell {
@@ -930,45 +943,44 @@ textarea:focus-visible {
 
   .landing {
     padding: 16px;
-    gap: 16px;
   }
 
-  .landing-panel,
-  .landing-stage,
+  .landing-card,
   .chat-shell {
     border-radius: 24px;
   }
 
-  .landing-panel,
-  .landing-stage {
+  .landing-card {
     padding: 20px;
   }
 
   .demo-banner {
-    margin: 12px 16px 0;
+    width: calc(100% - 24px);
+    margin-top: 12px;
     align-items: start;
-    flex-direction: column;
+    flex-wrap: wrap;
   }
 
-  .landing-stage-head,
-  .topbar,
-  .landing-footer,
   .chat-header {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .hero-title {
-    font-size: clamp(2.5rem, 12vw, 4rem);
+  .landing-title {
+    font-size: clamp(2rem, 11vw, 2.7rem);
   }
 
   .role-grid {
     grid-template-columns: 1fr;
   }
 
-  .input-grid,
+  .auth-panel,
   .composer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .auth-button {
+    width: 100%;
   }
 
   .messages {

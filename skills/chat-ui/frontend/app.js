@@ -565,8 +565,8 @@
     }
     return (
       '<div class="demo-banner">' +
-      '<span>Running in demo mode — start the backend for live chat</span>' +
-      '<button class="demo-banner-dismiss" type="button" data-action="dismiss-demo">Dismiss</button>' +
+      '<span>Running in demo mode. Start the backend for live chat.</span>' +
+      '<button class="demo-banner-dismiss" type="button" data-action="dismiss-demo" aria-label="Dismiss demo banner">×</button>' +
       "</div>"
     );
   }
@@ -592,56 +592,34 @@
 
   function landingMarkup() {
     const branding = state.config.branding;
-    const activeLandingRole = getRole(state.activeRole);
     return (
       '<main class="screen landing view-transition">' +
       demoBannerMarkup() +
-      '<section class="landing">' +
-      '<aside class="landing-panel glass">' +
-      '<div class="topbar">' +
+      '<section class="landing-shell">' +
+      '<div class="landing-topbar">' +
       brandMarkup(branding.product_name) +
       themeToggleMarkup() +
       "</div>" +
-      '<div class="landing-hero">' +
-      '<p class="eyebrow">Internal AI Operations Desk</p>' +
-      '<h1 class="hero-title">' + escapeHtml(branding.product_name) + " for every team that needs answers fast.</h1>" +
-      '<p class="landing-body">A premium white-label chat layer for employees to route questions to role-based AI agents across finance, ops, people, and admin workflows.</p>' +
-      '<div class="hero-metrics">' +
-      '<div class="metric"><strong>' + state.roles.length + '</strong><span>Role agents live</span></div>' +
-      '<div class="metric"><strong>' + (state.isDemo ? "Demo" : "Live") + '</strong><span>Connection mode</span></div>' +
-      '<div class="metric"><strong>24/7</strong><span>Internal coverage</span></div>' +
-      "</div>" +
-      "</div>" +
-      '<div class="landing-footer">' +
-      '<div><p class="helper">Selected role</p><strong>' + escapeHtml(activeLandingRole.name) + "</strong></div>" +
-      '<div class="status-pill"><span class="status-dot"></span><span class="status-copy">' +
-      escapeHtml(state.isDemo ? "Backend unreachable. Using AcmeCorp demo." : "Connected to live company config.") +
-      "</span></div>" +
-      "</div>" +
-      "</aside>" +
-      '<section class="landing-stage glass">' +
-      '<div class="landing-stage-head">' +
-      '<div><p class="eyebrow">Choose a role agent</p><h2 class="section-title">Start from the right desk</h2></div>' +
-      '<button class="ghost-button" data-action="toggle-theme">' + escapeHtml(state.theme === "dark" ? "Light mode" : "Dark mode") + "</button>" +
+      '<section class="landing-card glass">' +
+      '<div class="landing-header">' +
+      '<p class="eyebrow">Workspace access</p>' +
+      '<h1 class="landing-title">' + escapeHtml(branding.product_name) + '</h1>' +
+      '<p class="landing-subtitle">Choose a Role Agent</p>' +
+      '<p class="landing-body">Pick the desk you want to start with, enter your name, and step into the workspace.</p>' +
       "</div>" +
       '<div class="role-grid">' +
       state.roles.map(function (role) {
         return (
           '<button class="role-card' + (role.id === state.activeRole ? " is-active" : "") + '" data-action="pick-role" data-role="' + escapeHtml(role.id) + '">' +
-          '<div class="role-avatar">' + escapeHtml(role.emoji) + "</div>" +
-          '<div><h3 class="role-name">' + escapeHtml(role.name) + '</h3><p class="role-copy">' + escapeHtml(role.description) + "</p></div>" +
-          '<p class="role-greeting">' + escapeHtml(roleStatusText(role.id)) + " agent</p>" +
+          '<div class="role-card-head"><div class="role-avatar">' + escapeHtml(role.emoji) + '</div><div class="role-status"><span class="status-dot"></span><span>Ready</span></div></div>' +
+          '<div class="role-card-body"><h3 class="role-name">' + escapeHtml(role.name) + '</h3><p class="role-copy">' + escapeHtml(role.description) + "</p></div>" +
           "</button>"
         );
       }).join("") +
       "</div>" +
       '<div class="auth-panel">' +
-      '<div><p class="eyebrow">Employee access</p><h3 class="role-name">Enter your name and open chat</h3></div>' +
-      '<div class="input-grid">' +
-      '<div class="field"><label for="employee-name">Employee name</label><input id="employee-name" name="employee-name" autocomplete="name" placeholder="Jordan Lee" value="' + escapeHtml(state.employeeName) + '" /></div>' +
-      '<button class="primary-button" data-action="auth">' + escapeHtml(state.authPending ? "Connecting..." : "Enter workspace") + "</button>" +
-      "</div>" +
-      '<p class="helper">Company: <strong>' + escapeHtml(state.config.company_id) + "</strong> • WebSocket: <strong>" + escapeHtml(DEFAULT_WS_BASE) + "</strong></p>" +
+      '<div class="field field-inline"><label for="employee-name" class="sr-only">Your name</label><input id="employee-name" name="employee-name" autocomplete="name" placeholder="Your name" value="' + escapeHtml(state.employeeName) + '" /></div>' +
+      '<button class="primary-button auth-button" data-action="auth">' + escapeHtml(state.authPending ? "Connecting..." : "Enter workspace") + "</button>" +
       "</div>" +
       "</section>" +
       "</section>" +
@@ -659,7 +637,7 @@
   }
 
   function themeToggleMarkup() {
-    return '<button class="theme-toggle" data-action="toggle-theme">' + escapeHtml(state.theme === "dark" ? "Dark" : "Light") + "</button>";
+    return '<button class="theme-toggle" data-action="toggle-theme" aria-label="Toggle color theme">' + escapeHtml(state.theme === "dark" ? "Light mode" : "Dark mode") + "</button>";
   }
 
   function chatMarkup() {
@@ -698,7 +676,7 @@
       '<div class="message-avatar">' + escapeHtml(role.emoji) + "</div>" +
       '<div class="chat-heading"><h1 class="chat-title">' + connectionIndicatorMarkup(role.id) + escapeHtml(role.name) + '</h1><p class="presence">' + escapeHtml(role.description) + " • " + escapeHtml(roleStatusText(role.id)) + "</p></div>" +
       "</div>" +
-      '<div class="chat-actions"><button class="ghost-button" data-action="back">Back</button>' + themeToggleMarkup() + "</div>" +
+      '<div class="chat-actions"><button class="ghost-button" data-action="back">Back</button></div>' +
       "</header>" +
       '<section class="messages" id="messages">' +
       (state.historyPendingByRole[state.activeRole] ? '<div class="history-loading">Loading recent history...</div>' : "") +
