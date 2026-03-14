@@ -1,0 +1,107 @@
+{
+  "api": {
+    "name": "demo-crm",
+    "displayName": "Demo CRM",
+    "baseUrl": "http://127.0.0.1:8765/api/v1",
+    "auth": {
+      "type": "bearer",
+      "envVar": "DEMO_API_TOKEN"
+    }
+  },
+  "endpoints": [
+    {
+      "name": "contacts.list",
+      "method": "GET",
+      "path": "/contacts",
+      "description": "List CRM contacts",
+      "params": [
+        { "name": "page", "type": "int", "default": 1, "description": "Page number" },
+        { "name": "limit", "type": "int", "default": 20, "description": "Items per page" }
+      ]
+    },
+    {
+      "name": "contacts.get",
+      "method": "GET",
+      "path": "/contacts/{id}",
+      "description": "Get one contact",
+      "params": [
+        { "name": "id", "type": "string", "required": true, "description": "Contact ID" }
+      ]
+    },
+    {
+      "name": "contacts.create",
+      "method": "POST",
+      "path": "/contacts",
+      "description": "Create a contact",
+      "body": [
+        { "name": "name", "type": "string", "required": true, "description": "Full name" },
+        { "name": "email", "type": "string", "required": true, "description": "Email address" },
+        { "name": "phone", "type": "string", "description": "Phone number" },
+        { "name": "company", "type": "string", "description": "Company name" },
+        { "name": "title", "type": "string", "description": "Job title" },
+        { "name": "status", "type": "string", "description": "CRM status" }
+      ]
+    },
+    {
+      "name": "contacts.update",
+      "method": "PUT",
+      "path": "/contacts/{id}",
+      "description": "Update a contact",
+      "params": [
+        { "name": "id", "type": "string", "required": true, "description": "Contact ID" }
+      ],
+      "body": [
+        { "name": "name", "type": "string" },
+        { "name": "email", "type": "string" },
+        { "name": "phone", "type": "string" },
+        { "name": "company", "type": "string" },
+        { "name": "title", "type": "string" },
+        { "name": "status", "type": "string" }
+      ]
+    },
+    {
+      "name": "contacts.delete",
+      "method": "DELETE",
+      "path": "/contacts/{id}",
+      "description": "Delete a contact",
+      "params": [
+        { "name": "id", "type": "string", "required": true, "description": "Contact ID" }
+      ]
+    },
+    {
+      "name": "deals.list",
+      "method": "GET",
+      "path": "/deals",
+      "description": "List deals"
+    },
+    {
+      "name": "deals.get",
+      "method": "GET",
+      "path": "/deals/{id}",
+      "description": "Get one deal",
+      "params": [
+        { "name": "id", "type": "string", "required": true, "description": "Deal ID" }
+      ]
+    },
+    {
+      "name": "deals.create",
+      "method": "POST",
+      "path": "/deals",
+      "description": "Create a deal",
+      "body": [
+        { "name": "name", "type": "string", "required": true },
+        { "name": "value", "type": "int", "required": true },
+        { "name": "contactId", "type": "string", "required": true },
+        { "name": "stage", "type": "string" },
+        { "name": "currency", "type": "string" },
+        { "name": "owner", "type": "string" }
+      ]
+    },
+    {
+      "name": "reports.summary",
+      "method": "GET",
+      "path": "/reports/summary",
+      "description": "Get dashboard summary"
+    }
+  ]
+}

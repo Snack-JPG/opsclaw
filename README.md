@@ -185,6 +185,28 @@ Add polished captures here before publishing a public showcase. Recommended set:
 
 See [docs/api-integrations.md](docs/api-integrations.md) for setup expectations, auth model, and operational notes.
 
+## API Bridge
+
+OpsClaw includes an API Bridge generator that turns a REST API into an agent-ready CLI wrapper plus a matching generated `SKILL.md`.
+
+- Source types: manual endpoint config JSON or OpenAPI JSON/YAML
+- Output: `generated/<api-name>/cli.py`, `generated/<api-name>/SKILL.md`, and normalized `config.json`
+- Runtime features: bearer token, API key, and OAuth2 bearer auth support; `GET`, `POST`, `PUT`, `PATCH`, `DELETE`; default pretty JSON with `--format json|table|csv`
+
+Generate a bridge with:
+
+```bash
+python3 scripts/api-bridge/generator.py --config path/to/api-config.json
+```
+
+Run the complete local demo with:
+
+```bash
+bash demo/api-bridge-demo/run-demo.sh
+```
+
+See [skills/api-bridge/README.md](skills/api-bridge/README.md) for config guidance and [demo/api-bridge-demo/run-demo.sh](demo/api-bridge-demo/run-demo.sh) for the end-to-end example.
+
 ## Deployment Modes
 
 | Mode | Best for | Notes |

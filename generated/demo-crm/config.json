@@ -1,0 +1,289 @@
+{
+  "api": {
+    "auth": {
+      "envVar": "DEMO_API_TOKEN",
+      "header": "Authorization",
+      "type": "bearer"
+    },
+    "baseUrl": "http://127.0.0.1:8765/api/v1",
+    "displayName": "Demo CRM",
+    "name": "demo-crm"
+  },
+  "endpoints": [
+    {
+      "body": [
+        {
+          "default": null,
+          "description": "Full name",
+          "location": "body",
+          "name": "name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "Email address",
+          "location": "body",
+          "name": "email",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "Phone number",
+          "location": "body",
+          "name": "phone",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "Company name",
+          "location": "body",
+          "name": "company",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "Job title",
+          "location": "body",
+          "name": "title",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "CRM status",
+          "location": "body",
+          "name": "status",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "description": "Create a contact",
+      "method": "POST",
+      "name": "contacts.create",
+      "params": [],
+      "path": "/contacts"
+    },
+    {
+      "body": [],
+      "description": "Delete a contact",
+      "method": "DELETE",
+      "name": "contacts.delete",
+      "params": [
+        {
+          "default": null,
+          "description": "Contact ID",
+          "location": "path",
+          "name": "id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "path": "/contacts/{id}"
+    },
+    {
+      "body": [],
+      "description": "Get one contact",
+      "method": "GET",
+      "name": "contacts.get",
+      "params": [
+        {
+          "default": null,
+          "description": "Contact ID",
+          "location": "path",
+          "name": "id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "path": "/contacts/{id}"
+    },
+    {
+      "body": [],
+      "description": "List CRM contacts",
+      "method": "GET",
+      "name": "contacts.list",
+      "params": [
+        {
+          "default": 1,
+          "description": "Page number",
+          "location": "query",
+          "name": "page",
+          "required": false,
+          "type": "int"
+        },
+        {
+          "default": 20,
+          "description": "Items per page",
+          "location": "query",
+          "name": "limit",
+          "required": false,
+          "type": "int"
+        }
+      ],
+      "path": "/contacts"
+    },
+    {
+      "body": [
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "name",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "email",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "phone",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "company",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "title",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "status",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "description": "Update a contact",
+      "method": "PUT",
+      "name": "contacts.update",
+      "params": [
+        {
+          "default": null,
+          "description": "Contact ID",
+          "location": "path",
+          "name": "id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "path": "/contacts/{id}"
+    },
+    {
+      "body": [
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "value",
+          "required": true,
+          "type": "int"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "contactId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "stage",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "currency",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "description": "",
+          "location": "body",
+          "name": "owner",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "description": "Create a deal",
+      "method": "POST",
+      "name": "deals.create",
+      "params": [],
+      "path": "/deals"
+    },
+    {
+      "body": [],
+      "description": "Get one deal",
+      "method": "GET",
+      "name": "deals.get",
+      "params": [
+        {
+          "default": null,
+          "description": "Deal ID",
+          "location": "path",
+          "name": "id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "path": "/deals/{id}"
+    },
+    {
+      "body": [],
+      "description": "List deals",
+      "method": "GET",
+      "name": "deals.list",
+      "params": [],
+      "path": "/deals"
+    },
+    {
+      "body": [],
+      "description": "Get dashboard summary",
+      "method": "GET",
+      "name": "reports.summary",
+      "params": [],
+      "path": "/reports/summary"
+    }
+  ],
+  "meta": {
+    "sourceType": "manual"
+  }
+}

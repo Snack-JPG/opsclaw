@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpsClaw API Bridge Manual Config",
+  "type": "object",
+  "required": ["api", "endpoints"],
+  "additionalProperties": false,
+  "properties": {
+    "api": {
+      "type": "object",
+      "required": ["name", "baseUrl"],
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "baseUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "auth": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": true,
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["none", "bearer", "apiKey", "api_key", "oauth2"]
+            },
+            "envVar": {
+              "type": "string"
+            },
+            "header": {
+              "type": "string"
+            },
+            "keyName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string",
+              "enum": ["header", "query"]
+            },
+            "tokenEnv": {
+              "type": "string"
+            },
+            "accessTokenEnv": {
+              "type": "string"
+            },
+            "tokenUrl": {
+              "type": "string"
+            },
+            "scopes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "method", "path"],
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/field"
+            }
+          },
+          "body": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/field"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "str", "integer", "int", "number", "float", "boolean", "bool", "array", "object"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {},
+        "location": {
+          "type": "string",
+          "enum": ["path", "query", "header", "body"]
+        }
+      }
+    }
+  }
+}
