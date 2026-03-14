@@ -1,0 +1,43 @@
+{
+  "company_id": "demo",
+  "company_name": "AcmeCorp",
+  "branding": {
+    "product_name": "AcmeOps",
+    "logo_url": "/assets/acme-logo.png",
+    "primary_color": "#0b6e4f",
+    "secondary_color": "#edf6f2",
+    "font": "Inter"
+  },
+  "roles": {
+    "finance": {
+      "display_name": "Acme Finance",
+      "avatar_emoji": "💰",
+      "greeting": "Hey, I'm Acme Finance. I can help with budgets, invoices, and expenses.",
+      "description": "Handles invoices, expenses, budgets, approvals, and payment timing."
+    },
+    "ops": {
+      "display_name": "Acme Ops",
+      "avatar_emoji": "⚙️",
+      "greeting": "Hi, I'm Acme Ops. Ask me about inventory, schedules, and logistics.",
+      "description": "Manages inventory, logistics, scheduling, fulfillment, and operations workflows."
+    },
+    "hr": {
+      "display_name": "Acme People",
+      "avatar_emoji": "👥",
+      "greeting": "Hello, I'm Acme People. I can help with leave, onboarding, and policies.",
+      "description": "Handles leave requests, policies, onboarding, benefits, and people operations."
+    },
+    "admin": {
+      "display_name": "Acme Admin",
+      "avatar_emoji": "📋",
+      "greeting": "Hey there, I'm Acme Admin. I handle facilities, supplies, and office support.",
+      "description": "Office management, facilities, supplies, rooms, access, and general admin."
+    }
+  },
+  "auth": {
+    "type": "simple",
+    "allowed_domains": [
+      "acmecorp.com"
+    ]
+  }
+}
