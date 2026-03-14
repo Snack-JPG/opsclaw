@@ -13,23 +13,23 @@
     },
     roles: {
       finance: {
-        name: "Finance Lead",
-        emoji: "💸",
+        display_name: "Finance Lead",
+        avatar_emoji: "💸",
         description: "Budgets, approvals, reimbursement timing, and spend sanity checks.",
       },
       ops: {
-        name: "Ops Desk",
-        emoji: "⚙️",
+        display_name: "Ops Desk",
+        avatar_emoji: "⚙️",
         description: "Escalations, blockers, logistics, scheduling, and internal triage.",
       },
       hr: {
-        name: "People Partner",
-        emoji: "🫶",
+        display_name: "People Partner",
+        avatar_emoji: "🫶",
         description: "Policy guidance, onboarding, leave, benefits, and manager comms.",
       },
       admin: {
-        name: "Admin Coordinator",
-        emoji: "🗂️",
+        display_name: "Admin Coordinator",
+        avatar_emoji: "🗂️",
         description: "Facilities, access, procurement, room planning, and office requests.",
       },
     },
@@ -85,6 +85,10 @@
     messageDraft: "",
     reconnectTimer: null,
     lastTypingRole: "",
+    loadedHistoryByRole: {},
+    historyPendingByRole: {},
+    sendButtonAnimating: false,
+    demoBannerDismissed: false,
   };
 
   function getQueryParam(key) {
@@ -120,10 +124,14 @@
     const roles = list.map(function (roleId) {
       const roleValue = typeof roleId === "string" ? roleId : roleId.role;
       const source = typeof roleId === "object" ? roleId : rolesSource[roleValue] || {};
+      const displayName = source.display_name || source.name || roleValue;
+      const avatarEmoji = source.avatar_emoji || source.emoji || "✨";
       return {
         id: roleValue,
-        emoji: source.emoji || source.avatar_emoji || "✨",
-        name: source.name || source.display_name || roleValue,
+        display_name: displayName,
+        name: displayName,
+        avatar_emoji: avatarEmoji,
+        emoji: avatarEmoji,
         description: source.description || "Internal role agent.",
       };
     });
@@ -165,6 +173,7 @@
 
   function loadDemoConfig(reason) {
     state.isDemo = true;
+    state.demoBannerDismissed = false;
     state.config = normalizeConfig(DEMO_CONFIG);
     hydrateRoles();
     seedDemoMessages();
@@ -241,7 +250,14 @@
   }
 
   function getRole(roleId) {
-    return state.roleMap[roleId] || { id: roleId, name: roleId, emoji: "✨", description: "Internal role agent." };
+    return state.roleMap[roleId] || {
+      id: roleId,
+      display_name: roleId,
+      name: roleId,
+      avatar_emoji: "✨",
+      emoji: "✨",
+      description: "Internal role agent.",
+    };
   }
 
   function pushMessage(roleId, payload) {
@@ -257,6 +273,18 @@
     if (state.activeRole !== roleId && payload.author === "agent") {
       state.unreadByRole[roleId] = (state.unreadByRole[roleId] || 0) + 1;
     }
+  }
+
+  function replaceMessages(roleId, messages) {
+    state.messagesByRole[roleId] = messages.map(function (message) {
+      return {
+        id: message.id || uid(),
+        author: message.sender === "user" ? "user" : "agent",
+        text: message.text || "",
+        timestamp: message.timestamp || nowIso(),
+        agentName: message.agent_name || getRole(roleId).name,
+      };
+    });
   }
 
   function roleStatusText(roleId) {
@@ -308,7 +336,7 @@
       if (state.isDemo) {
         scrollMessagesToBottom();
       } else {
-        connectSocket(state.activeRole);
+        await activateRole(state.activeRole);
       }
     } catch (error) {
       loadDemoConfig("Auth unavailable, switching to demo mode.");
@@ -330,10 +358,41 @@
   function closeSocket(manual) {
     window.clearTimeout(state.reconnectTimer);
     if (state.socket) {
+      var previousRole = state.socketRole;
       state.socket.__manualClose = !!manual;
       state.socket.close();
       state.socket = null;
       state.socketRole = "";
+      if (previousRole && !state.isDemo) {
+        state.socketStatusByRole[previousRole] = "offline";
+      }
+    }
+  }
+
+  async function loadHistory(roleId) {
+    if (state.isDemo || !state.token || !roleId) {
+      return;
+    }
+    state.historyPendingByRole[roleId] = true;
+    render();
+    try {
+      const history = await fetchJson(
+        state.apiBase + "/api/history?role=" + encodeURIComponent(roleId) + "&limit=20",
+        {
+          headers: {
+            Authorization: "Bearer " + state.token,
+          },
+        }
+      );
+      replaceMessages(roleId, Array.isArray(history.messages) ? history.messages : []);
+      state.loadedHistoryByRole[roleId] = true;
+      state.unreadByRole[roleId] = 0;
+    } catch (error) {
+      console.warn("History unavailable for role", roleId, error);
+    } finally {
+      state.historyPendingByRole[roleId] = false;
+      render();
+      scrollMessagesToBottom();
     }
   }
 
@@ -447,6 +506,11 @@
     if (!text || !roleId) {
       return;
     }
+    state.sendButtonAnimating = true;
+    window.setTimeout(function () {
+      state.sendButtonAnimating = false;
+      render();
+    }, 150);
     pushMessage(roleId, {
       author: "user",
       text: text,
@@ -470,14 +534,41 @@
     );
   }
 
+  async function activateRole(roleId) {
+    await loadHistory(roleId);
+    connectSocket(roleId);
+  }
+
   function setActiveRole(roleId) {
     state.activeRole = roleId;
     state.unreadByRole[roleId] = 0;
     if (state.activeView === "chat" && !state.isDemo) {
-      connectSocket(roleId);
+      activateRole(roleId);
     }
     render();
     scrollMessagesToBottom();
+  }
+
+  function dismissDemoBanner() {
+    state.demoBannerDismissed = true;
+    render();
+  }
+
+  function connectionIndicatorMarkup(roleId) {
+    var isConnected = state.socketStatusByRole[roleId] === "online";
+    return '<span class="connection-indicator ' + (isConnected ? "is-connected" : "is-disconnected") + '" aria-hidden="true"></span>';
+  }
+
+  function demoBannerMarkup() {
+    if (!state.isDemo || state.demoBannerDismissed) {
+      return "";
+    }
+    return (
+      '<div class="demo-banner">' +
+      '<span>Running in demo mode — start the backend for live chat</span>' +
+      '<button class="demo-banner-dismiss" type="button" data-action="dismiss-demo">Dismiss</button>' +
+      "</div>"
+    );
   }
 
   function formatTime(timestamp) {
@@ -504,6 +595,7 @@
     const activeLandingRole = getRole(state.activeRole);
     return (
       '<main class="screen landing view-transition">' +
+      demoBannerMarkup() +
       '<section class="landing">' +
       '<aside class="landing-panel glass">' +
       '<div class="topbar">' +
@@ -575,6 +667,7 @@
     const messages = state.messagesByRole[state.activeRole] || [];
     return (
       '<main class="screen view-transition">' +
+      demoBannerMarkup() +
       '<section class="app-shell">' +
       '<aside class="sidebar glass">' +
       '<div class="topbar">' +
@@ -589,7 +682,7 @@
           '<button class="sidebar-role' + (entry.id === state.activeRole ? " is-active" : "") + '" data-action="pick-role" data-role="' + escapeHtml(entry.id) + '">' +
           '<div class="sidebar-avatar">' + escapeHtml(entry.emoji) + "</div>" +
           '<div class="sidebar-role-meta"><div class="role-name">' + escapeHtml(entry.name) + '</div><p class="role-copy">' + escapeHtml(entry.description) + "</p></div>" +
-          (unread ? '<span class="unread-badge">' + unread + "</span>" : "") +
+          (unread ? '<span class="unread-dot" aria-label="Unread messages"></span>' : "") +
           "</button>"
         );
       }).join("") +
@@ -603,17 +696,18 @@
       '<header class="chat-header">' +
       '<div class="chat-header-main">' +
       '<div class="message-avatar">' + escapeHtml(role.emoji) + "</div>" +
-      '<div class="chat-heading"><h1 class="chat-title">' + escapeHtml(role.name) + '</h1><p class="presence">' + escapeHtml(role.description) + " • " + escapeHtml(roleStatusText(role.id)) + "</p></div>" +
+      '<div class="chat-heading"><h1 class="chat-title">' + connectionIndicatorMarkup(role.id) + escapeHtml(role.name) + '</h1><p class="presence">' + escapeHtml(role.description) + " • " + escapeHtml(roleStatusText(role.id)) + "</p></div>" +
       "</div>" +
       '<div class="chat-actions"><button class="ghost-button" data-action="back">Back</button>' + themeToggleMarkup() + "</div>" +
       "</header>" +
       '<section class="messages" id="messages">' +
+      (state.historyPendingByRole[state.activeRole] ? '<div class="history-loading">Loading recent history...</div>' : "") +
       (messages.length ? messages.map(function (message) {
         const authorName = message.author === "user"
           ? (state.session && state.session.employee_name) || state.employeeName || "You"
           : message.agentName || role.name;
         return (
-          '<article class="message-row ' + message.author + '">' +
+          '<article class="message-row ' + message.author + ' is-new">' +
           '<div class="message-avatar">' + escapeHtml(message.author === "user" ? initials() : role.emoji) + "</div>" +
           '<div class="message-body">' +
           '<div class="message-name">' + escapeHtml(authorName) + "</div>" +
@@ -630,7 +724,7 @@
       '<form class="composer" id="composer">' +
       '<div class="composer-grid">' +
       '<textarea id="composer-input" placeholder="Ask ' + escapeHtml(role.name) + ' about budgets, blockers, policies, or operations..." rows="1">' + escapeHtml(state.messageDraft) + "</textarea>" +
-      '<button class="primary-button" type="submit">Send</button>' +
+      '<button class="primary-button send-button' + (state.sendButtonAnimating ? " is-animating" : "") + '" type="submit">Send</button>' +
       "</div>" +
       '<div class="composer-note">Messages send as <code>{type:&quot;message&quot;, text:&quot;...&quot;, role:&quot;' + escapeHtml(role.id) + '&quot;}</code></div>' +
       "</form>" +
@@ -645,9 +739,10 @@
     return (
       '<nav class="mobile-nav">' +
       state.roles.map(function (role) {
+        var unread = state.unreadByRole[role.id] || 0;
         return (
           '<button class="mobile-role-button' + (role.id === state.activeRole ? " is-active" : "") + '" data-action="pick-role" data-role="' + escapeHtml(role.id) + '">' +
-          '<span class="emoji">' + escapeHtml(role.emoji) + '</span><span>' + escapeHtml(role.name.split(" ")[0]) + "</span>" +
+          '<span class="emoji-wrap"><span class="emoji">' + escapeHtml(role.emoji) + '</span>' + (unread ? '<span class="unread-dot" aria-hidden="true"></span>' : "") + '</span><span>' + escapeHtml(role.name.split(" ")[0]) + "</span>" +
           "</button>"
         );
       }).join("") +
@@ -691,6 +786,12 @@
         state.activeView = "landing";
         state.typingByRole = {};
         render();
+      };
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-action='dismiss-demo']"), function (button) {
+      button.onclick = function () {
+        dismissDemoBanner();
       };
     });
 

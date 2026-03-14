@@ -115,6 +115,28 @@ textarea:focus-visible {
   position: relative;
 }
 
+.demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 16px 20px 0;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 78%, var(--secondary) 22%);
+  color: var(--muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.demo-banner-dismiss {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
 .glass {
   border: 1px solid var(--border);
   background: var(--surface);
@@ -532,17 +554,13 @@ textarea:focus-visible {
   font-size: 0.9rem;
 }
 
-.unread-badge {
-  min-width: 24px;
-  height: 24px;
-  padding: 0 7px;
+.unread-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
-  display: inline-grid;
-  place-items: center;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 90%, white 10%), color-mix(in srgb, var(--primary) 74%, black 6%));
+  background: #dd524c;
+  box-shadow: 0 0 0 5px color-mix(in srgb, #dd524c 14%, transparent);
+  flex-shrink: 0;
 }
 
 .side-footer {
@@ -579,11 +597,31 @@ textarea:focus-visible {
 
 .chat-title {
   font-size: 1.14rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .presence {
   margin: 4px 0 0;
   font-size: 0.9rem;
+}
+
+.connection-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.connection-indicator.is-connected {
+  background: #31c48d;
+  box-shadow: 0 0 0 6px color-mix(in srgb, #31c48d 12%, transparent);
+}
+
+.connection-indicator.is-disconnected {
+  background: #dd524c;
+  box-shadow: 0 0 0 6px color-mix(in srgb, #dd524c 12%, transparent);
 }
 
 .chat-actions {
@@ -600,13 +638,41 @@ textarea:focus-visible {
   flex-direction: column;
   gap: 16px;
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 24%, transparent) transparent;
+}
+
+.messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.history-loading {
+  align-self: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-strong) 76%, transparent);
+  color: var(--muted);
+  font-size: 0.86rem;
 }
 
 .message-row {
   display: flex;
   gap: 12px;
   max-width: min(76%, 760px);
-  animation: message-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.message-row.is-new {
+  animation: message-in 200ms ease-out;
 }
 
 .message-row.agent {
@@ -721,8 +787,28 @@ textarea:focus-visible {
   font-size: 0.84rem;
 }
 
+.send-button {
+  transform-origin: center;
+}
+
+.send-button.is-animating {
+  animation: send-tap 150ms ease-out;
+}
+
 .mobile-nav {
   display: none;
+}
+
+.emoji-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.emoji-wrap .unread-dot {
+  position: absolute;
+  top: -3px;
+  right: -6px;
 }
 
 .view-transition {
@@ -732,11 +818,26 @@ textarea:focus-visible {
 @keyframes message-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
+  }
+}
+
+@keyframes send-tap {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -841,6 +942,12 @@ textarea:focus-visible {
   .landing-panel,
   .landing-stage {
     padding: 20px;
+  }
+
+  .demo-banner {
+    margin: 12px 16px 0;
+    align-items: start;
+    flex-direction: column;
   }
 
   .landing-stage-head,
