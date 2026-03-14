@@ -8,11 +8,10 @@ import asyncio
 import base64
 import hashlib
 import json
-import os
+import random
 import socket
 import struct
 import threading
-import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -26,6 +25,7 @@ from chat_backend_core import (
     MessageStore,
     SessionManager,
     ensure_dirs,
+    generate_ai_response,
     generate_agent_response,
     sanitize_config_for_client,
     utc_now_iso,
@@ -364,6 +364,12 @@ async def handle_websocket_client(
                 sender="user",
                 text=text,
             )
+            history = app["message_store"].load_messages_for_ai(
+                session["company_id"],
+                role,
+                session["user_id"],
+                limit=10,
+            )
             await websocket_send_json(
                 writer,
                 {
@@ -372,8 +378,30 @@ async def handle_websocket_client(
                     "timestamp": utc_now_iso(),
                 },
             )
-            await asyncio.sleep(0.35)
-            response = generate_agent_response(config, role, text, session["employee_name"])
+            typing_started_at = asyncio.get_running_loop().time()
+            ai_text = await asyncio.to_thread(
+                generate_ai_response,
+                config,
+                role,
+                text,
+                session["employee_name"],
+                history,
+            )
+            if ai_text:
+                response = {
+                    "type": "response",
+                    "text": ai_text,
+                    "agent_name": role_data.get("display_name", role.title()),
+                    "timestamp": utc_now_iso(),
+                }
+                target_delay = random.uniform(0.5, 1.5)
+                elapsed = asyncio.get_running_loop().time() - typing_started_at
+                remaining = target_delay - elapsed
+                if remaining > 0:
+                    await asyncio.sleep(remaining)
+            else:
+                await asyncio.sleep(0.35)
+                response = generate_agent_response(config, role, text, session["employee_name"])
             app["message_store"].append_message(
                 session["company_id"],
                 role,

@@ -1,6 +1,6 @@
 # OpsClaw Chat Backend
 
-`skills/chat-backend/` is a white-label, stdlib-only chat backend for OpsClaw role agents. It exposes REST endpoints for config, roles, auth, and history, plus a raw WebSocket server for live chat with role-specific template responses.
+`skills/chat-backend/` is a white-label, stdlib-only chat backend for OpsClaw role agents. It exposes REST endpoints for config, roles, auth, and history, plus a raw WebSocket server for live chat with role-specific template responses or real Claude responses when configured.
 
 No pip dependencies are required. The runtime uses:
 
@@ -38,6 +38,12 @@ python3 skills/chat-backend/scripts/server.py \
   --ws-port 8765 \
   --verbose
 ```
+
+Environment variables:
+
+- `ANTHROPIC_API_KEY`: required for real AI responses. If unset, the backend silently falls back to the built-in templates.
+- `OPSCLAW_MODEL`: optional Claude model override. Defaults to `claude-sonnet-4-20250514`.
+- `OPSCLAW_MAX_TOKENS`: optional max tokens for Claude responses. Defaults to `500`.
 
 ## Company Configs
 
@@ -172,7 +178,7 @@ Returns stored chat history for the authenticated user. Provide the token either
 curl "http://127.0.0.1:8000/api/history?role=finance&limit=20&token=<session-token>"
 ```
 
-History is loaded from `data/<company_id>/<role>/<user_id>.json` and capped to the most recent `1000` messages per file.
+History is loaded from `data/<company_id>/<role>/<user_id>.json` and capped to the most recent `1000` messages per file. The WebSocket responder uses the last `10` messages as Claude conversation context when AI mode is enabled.
 
 ## WebSocket Protocol
 
@@ -235,6 +241,14 @@ The backend ships with role-specific template banks and keyword matching for:
 - admin
 
 Each role has 15 to 20 natural response variants across common topics, plus fallback responses when the message is more general.
+
+If `ANTHROPIC_API_KEY` is set, the backend calls the Anthropic Messages API with:
+
+- the last `10` chat messages as conversation context
+- a role-specific system prompt loaded from `configs/role-prompts/<role>.txt` when present
+- a generated prompt from the role config when no custom prompt file exists
+
+If the API call fails for any reason, the backend logs a warning and returns the existing template response instead.
 
 ## Message Store CLI
 

@@ -12,20 +12,26 @@ import json
 import os
 import random
 import re
+import sys
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 CONFIG_DIR = ROOT_DIR / "configs" / "company-configs"
+ROLE_PROMPTS_DIR = ROOT_DIR / "configs" / "role-prompts"
 DATA_DIR = ROOT_DIR / "data"
 SESSIONS_FILE = DATA_DIR / "sessions.json"
 MAX_MESSAGES_PER_FILE = 1000
 TOKEN_ENV_VAR = "OPSCLAW_CHAT_SECRET"
 DEFAULT_SECRET = "opsclaw-chat-backend-dev-secret"
+DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
+DEFAULT_MAX_TOKENS = 500
 
 
 def utc_now_iso() -> str:
@@ -253,6 +259,27 @@ class MessageStore:
         write_json(path, messages)
         return payload
 
+    def load_messages_for_ai(
+        self,
+        company_id: str,
+        role: str,
+        user_id: str,
+        limit: int = 10,
+    ) -> List[Dict[str, str]]:
+        history = self.load_messages(company_id, role, user_id, limit=limit)
+        formatted: List[Dict[str, str]] = []
+        for item in history:
+            text = (item.get("text") or "").strip()
+            if not text:
+                continue
+            formatted.append(
+                {
+                    "role": "assistant" if item.get("sender") == "agent" else "user",
+                    "content": text,
+                }
+            )
+        return formatted
+
 
 class SessionManager:
     def __init__(self, sessions_file: Path = SESSIONS_FILE, secret: Optional[str] = None) -> None:
@@ -455,6 +482,130 @@ def generate_agent_response(config: Dict[str, Any], role: str, message_text: str
         "agent_name": agent_name,
         "timestamp": utc_now_iso(),
     }
+
+
+def _parse_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return default
+
+
+def _role_prompt_path(role: str) -> Path:
+    return ROLE_PROMPTS_DIR / f"{slugify(role)}.txt"
+
+
+def _load_custom_role_prompt(
+    role: str,
+    *,
+    company_name: str,
+    display_name: str,
+    description: str,
+    greeting: str,
+    employee_name: str,
+) -> Optional[str]:
+    path = _role_prompt_path(role)
+    if not path.exists():
+        return None
+    template = path.read_text(encoding="utf-8").strip()
+    return template.format(
+        company_name=company_name or "AcmeCorp",
+        display_name=display_name,
+        description=description,
+        greeting=greeting,
+        employee_name=employee_name,
+    )
+
+
+def _build_system_prompt(
+    company_name: str,
+    role: str,
+    role_data: Dict[str, Any],
+    employee_name: str,
+) -> str:
+    display_name = role_data.get("display_name", role.title())
+    description = role_data.get("description", "").strip()
+    greeting = role_data.get("greeting", "").strip()
+    custom_prompt = _load_custom_role_prompt(
+        role,
+        company_name=company_name,
+        display_name=display_name,
+        description=description,
+        greeting=greeting,
+        employee_name=employee_name,
+    )
+    if custom_prompt:
+        return custom_prompt
+
+    parts = [
+        f"You are {display_name}, an AI assistant for {company_name}.",
+        description or f"You support the {role} function for internal employees.",
+        "Be helpful, concise, and professional.",
+        f"The employee talking to you is {employee_name}.",
+    ]
+    if greeting:
+        parts.append(f"Your usual greeting is: {greeting}")
+    return " ".join(parts)
+
+
+def _extract_anthropic_text(payload: Dict[str, Any]) -> Optional[str]:
+    content = payload.get("content")
+    if not isinstance(content, list):
+        return None
+    chunks: List[str] = []
+    for block in content:
+        if isinstance(block, dict) and block.get("type") == "text":
+            text = (block.get("text") or "").strip()
+            if text:
+                chunks.append(text)
+    if not chunks:
+        return None
+    return "\n".join(chunks).strip()
+
+
+def generate_ai_response(
+    config: Dict[str, Any],
+    role: str,
+    message_text: str,
+    employee_name: str,
+    conversation_history: List[Dict[str, str]],
+) -> Optional[str]:
+    api_key = (os.environ.get("ANTHROPIC_API_KEY") or "").strip()
+    if not api_key:
+        return None
+
+    role_data = config.get("roles", {}).get(role) or role_template(role)
+    company_name = config.get("company_name", "AcmeCorp")
+    messages = conversation_history[-10:]
+    if not messages:
+        messages = [{"role": "user", "content": message_text}]
+
+    body = {
+        "model": os.environ.get("OPSCLAW_MODEL", DEFAULT_ANTHROPIC_MODEL).strip() or DEFAULT_ANTHROPIC_MODEL,
+        "max_tokens": _parse_int_env("OPSCLAW_MAX_TOKENS", DEFAULT_MAX_TOKENS),
+        "system": _build_system_prompt(company_name, role, role_data, employee_name),
+        "messages": messages,
+    }
+    request = urllib_request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=json.dumps(body).encode("utf-8"),
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib_request.urlopen(request, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        return _extract_anthropic_text(payload)
+    except (urllib_error.URLError, urllib_error.HTTPError, TimeoutError, json.JSONDecodeError) as exc:
+        print(f"warning: anthropic api request failed for role '{role}': {exc}", file=sys.stderr, flush=True)
+        return None
 
 
 def sanitize_config_for_client(config: Dict[str, Any]) -> Dict[str, Any]:
