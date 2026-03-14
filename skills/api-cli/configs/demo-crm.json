@@ -1,0 +1,129 @@
+{
+  "auth": {
+    "env_var": "DEMO_CRM_TOKEN",
+    "type": "bearer"
+  },
+  "base_url": "http://127.0.0.1:8765/demo-crm/v1",
+  "name": "Demo CRM",
+  "pagination": {
+    "has_more_field": "has_more",
+    "limit_param": "limit",
+    "next_offset_field": "next_offset",
+    "offset_param": "offset",
+    "results_field": "data",
+    "type": "offset"
+  },
+  "resources": {
+    "companies": {
+      "base_path": "/companies",
+      "methods": {
+        "create": {
+          "body": true,
+          "http": "POST",
+          "path": "/"
+        },
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "limit",
+            "offset",
+            "search"
+          ],
+          "path": "/"
+        },
+        "update": {
+          "body": true,
+          "http": "PATCH",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        }
+      }
+    },
+    "contacts": {
+      "base_path": "/contacts",
+      "methods": {
+        "create": {
+          "body": true,
+          "http": "POST",
+          "path": "/"
+        },
+        "delete": {
+          "http": "DELETE",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "limit",
+            "offset",
+            "search",
+            "company_id"
+          ],
+          "path": "/"
+        },
+        "update": {
+          "body": true,
+          "http": "PATCH",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        }
+      }
+    },
+    "deals": {
+      "base_path": "/deals",
+      "methods": {
+        "create": {
+          "body": true,
+          "http": "POST",
+          "path": "/"
+        },
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "limit",
+            "offset",
+            "stage"
+          ],
+          "path": "/"
+        },
+        "update": {
+          "body": true,
+          "http": "PATCH",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        }
+      }
+    }
+  },
+  "service": "demo-crm"
+}

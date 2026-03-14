@@ -1,0 +1,99 @@
+{
+  "auth": {
+    "env_var": "DEMO_INVENTORY_KEY",
+    "header": "X-Demo-Key",
+    "type": "api-key"
+  },
+  "base_url": "http://127.0.0.1:8765/demo-inventory/v1",
+  "name": "Demo Inventory",
+  "pagination": {
+    "cursor_field": "next_cursor",
+    "cursor_param": "cursor",
+    "results_field": "items",
+    "type": "cursor"
+  },
+  "resources": {
+    "items": {
+      "base_path": "/items",
+      "methods": {
+        "create": {
+          "body": true,
+          "http": "POST",
+          "path": "/"
+        },
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "search": {
+          "http": "GET",
+          "params": [
+            "query",
+            "cursor",
+            "limit"
+          ],
+          "path": "/search"
+        },
+        "update": {
+          "body": true,
+          "http": "PATCH",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        }
+      }
+    },
+    "orders": {
+      "base_path": "/orders",
+      "methods": {
+        "create": {
+          "body": true,
+          "http": "POST",
+          "path": "/"
+        },
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "status",
+            "cursor",
+            "limit"
+          ],
+          "path": "/"
+        }
+      }
+    },
+    "warehouses": {
+      "base_path": "/warehouses",
+      "methods": {
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "cursor",
+            "limit",
+            "region"
+          ],
+          "path": "/"
+        }
+      }
+    }
+  },
+  "service": "demo-inventory"
+}

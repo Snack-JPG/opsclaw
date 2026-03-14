@@ -1,0 +1,98 @@
+{
+  "auth": {
+    "env_var": "DEMO_HR_BASIC",
+    "type": "basic"
+  },
+  "base_url": "http://127.0.0.1:8765/demo-hr/v1",
+  "name": "Demo HR",
+  "pagination": {
+    "results_field": "data",
+    "type": "link"
+  },
+  "resources": {
+    "departments": {
+      "base_path": "/departments",
+      "methods": {
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "limit",
+            "page"
+          ],
+          "path": "/"
+        }
+      }
+    },
+    "employees": {
+      "base_path": "/employees",
+      "methods": {
+        "create": {
+          "body": true,
+          "http": "POST",
+          "path": "/"
+        },
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "limit",
+            "page",
+            "department_id"
+          ],
+          "path": "/"
+        },
+        "update": {
+          "body": true,
+          "http": "PATCH",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        }
+      }
+    },
+    "leave-requests": {
+      "base_path": "/leave-requests",
+      "methods": {
+        "approve": {
+          "body": true,
+          "http": "POST",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}/approve"
+        },
+        "get": {
+          "http": "GET",
+          "params": [
+            "id"
+          ],
+          "path": "/{id}"
+        },
+        "list": {
+          "http": "GET",
+          "params": [
+            "limit",
+            "page",
+            "status"
+          ],
+          "path": "/"
+        }
+      }
+    }
+  },
+  "service": "demo-hr"
+}
