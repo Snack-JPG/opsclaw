@@ -59,6 +59,41 @@
     ],
   };
 
+  const DEMO_MARKDOWN_RESPONSE = [
+    "# Markdown Features",
+    "",
+    "This is **bold**, this is *italic*, and this is `inline code` with a [[Runbook Reference]] pill.",
+    "",
+    "## Lists",
+    "",
+    "- Bullet item one",
+    "- Bullet item two with a [helpful link](https://example.com)",
+    "- Bullet item three",
+    "",
+    "### Table",
+    "",
+    "| Feature | Status | Notes |",
+    "| --- | --- | --- |",
+    "| Headers | Ready | Renders h1 through h3 |",
+    "| Lists | Ready | Supports ordered and unordered |",
+    "| Tables | Ready | Includes zebra striping |",
+    "| Code | Ready | Inline and fenced blocks |",
+    "",
+    "```js",
+    "function greet(name) {",
+    "  return `Hello, ${name}`;",
+    "}",
+    "```",
+    "",
+    "> Blockquotes call out important guidance without losing the flow.",
+    "",
+    "---",
+    "",
+    "1. Ordered item one",
+    "2. Ordered item two",
+    "3. Ordered item three",
+  ].join("\n");
+
   const app = document.getElementById("app");
   const timeFormatter = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" });
 
@@ -102,6 +137,183 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value).replace(/`/g, "&#96;");
+  }
+
+  function formatInlineMarkdown(text) {
+    var htmlTokens = [];
+    var source = String(text || "")
+      .replace(/`([^`\n]+)`/g, function (_, code) {
+        var token = "%%HTML" + htmlTokens.length + "%%";
+        htmlTokens.push("<code>" + escapeHtml(code) + "</code>");
+        return token;
+      })
+      .replace(/\[\[([^\]]+)\]\]/g, function (_, label) {
+        var token = "%%HTML" + htmlTokens.length + "%%";
+        htmlTokens.push('<span class="wikilink">' + escapeHtml(label.trim()) + "</span>");
+        return token;
+      })
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+)\)/g, function (_, label, href) {
+        var token = "%%HTML" + htmlTokens.length + "%%";
+        htmlTokens.push('<a href="' + escapeAttribute(href) + '" target="_blank" rel="noreferrer noopener">' + escapeHtml(label) + "</a>");
+        return token;
+      });
+
+    source = escapeHtml(source)
+      .replace(/(\*\*|__)(.+?)\1/g, "<strong>$2</strong>")
+      .replace(/(^|[\s(])(\*|_)([^\n]+?)\2(?=[\s).,!?:;]|$)/g, "$1<em>$3</em>");
+
+    return source.replace(/%%HTML(\d+)%%/g, function (_, index) {
+      return htmlTokens[Number(index)] || "";
+    });
+  }
+
+  function isTableSeparator(line) {
+    var cells = line.trim().replace(/^\||\|$/g, "").split("|");
+    if (!cells.length) {
+      return false;
+    }
+    return cells.every(function (cell) {
+      return /^:?-{3,}:?$/.test(cell.trim());
+    });
+  }
+
+  function splitTableRow(line) {
+    return line.trim().replace(/^\||\|$/g, "").split("|").map(function (cell) {
+      return cell.trim();
+    });
+  }
+
+  function renderMarkdown(text) {
+    var lines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
+    var html = [];
+    var paragraph = [];
+    var inList = null;
+
+    function flushParagraph() {
+      if (!paragraph.length) {
+        return;
+      }
+      html.push("<p>" + formatInlineMarkdown(paragraph.join("\n")).replace(/\n/g, "<br>") + "</p>");
+      paragraph = [];
+    }
+
+    function flushList() {
+      if (!inList) {
+        return;
+      }
+      html.push("<" + inList.type + ">" + inList.items.join("") + "</" + inList.type + ">");
+      inList = null;
+    }
+
+    function flushBlocks() {
+      flushParagraph();
+      flushList();
+    }
+
+    for (var i = 0; i < lines.length; i += 1) {
+      var line = lines[i];
+      var trimmed = line.trim();
+
+      if (!trimmed) {
+        flushBlocks();
+        continue;
+      }
+
+      var fenceMatch = line.match(/^```([\w-]+)?\s*$/);
+      if (fenceMatch) {
+        var fence = [];
+        var language = fenceMatch[1] ? ' class="language-' + escapeAttribute(fenceMatch[1]) + '"' : "";
+        flushBlocks();
+        i += 1;
+        while (i < lines.length && !/^```\s*$/.test(lines[i])) {
+          fence.push(lines[i]);
+          i += 1;
+        }
+        html.push("<pre><code" + language + ">" + escapeHtml(fence.join("\n")) + "</code></pre>");
+        continue;
+      }
+
+      if (/^#{1,3}\s+/.test(trimmed)) {
+        var level = Math.min(3, trimmed.match(/^#+/)[0].length);
+        flushBlocks();
+        html.push("<h" + level + ">" + formatInlineMarkdown(trimmed.replace(/^#{1,3}\s+/, "")) + "</h" + level + ">");
+        continue;
+      }
+
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+        flushBlocks();
+        html.push("<hr>");
+        continue;
+      }
+
+      if (/^>\s?/.test(trimmed)) {
+        var quoteLines = [trimmed.replace(/^>\s?/, "")];
+        flushBlocks();
+        while (i + 1 < lines.length && /^>\s?/.test(lines[i + 1].trim())) {
+          i += 1;
+          quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
+        }
+        html.push("<blockquote><p>" + formatInlineMarkdown(quoteLines.join("\n")).replace(/\n/g, "<br>") + "</p></blockquote>");
+        continue;
+      }
+
+      if (trimmed.indexOf("|") !== -1 && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+        var headerCells = splitTableRow(line);
+        var bodyRows = [];
+        flushBlocks();
+        i += 2;
+        while (i < lines.length && lines[i].trim() && lines[i].indexOf("|") !== -1) {
+          bodyRows.push(splitTableRow(lines[i]));
+          i += 1;
+        }
+        i -= 1;
+        html.push(
+          '<div class="table-scroll"><table><thead><tr>' +
+          headerCells.map(function (cell) {
+            return "<th>" + formatInlineMarkdown(cell) + "</th>";
+          }).join("") +
+          "</tr></thead><tbody>" +
+          bodyRows.map(function (row) {
+            return "<tr>" + row.map(function (cell) {
+              return "<td>" + formatInlineMarkdown(cell) + "</td>";
+            }).join("") + "</tr>";
+          }).join("") +
+          "</tbody></table></div>"
+        );
+        continue;
+      }
+
+      var unorderedMatch = trimmed.match(/^[-*]\s+(.+)$/);
+      var orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+      if (unorderedMatch || orderedMatch) {
+        var listType = unorderedMatch ? "ul" : "ol";
+        var itemText = unorderedMatch ? unorderedMatch[1] : orderedMatch[1];
+        flushParagraph();
+        if (!inList || inList.type !== listType) {
+          flushList();
+          inList = { type: listType, items: [] };
+        }
+        inList.items.push("<li>" + formatInlineMarkdown(itemText) + "</li>");
+        continue;
+      }
+
+      flushList();
+      paragraph.push(line.trim());
+    }
+
+    flushBlocks();
+    return html.join("");
+  }
+
+  function renderMessageContent(message) {
+    if (message.author === "agent") {
+      return '<div class="message-content">' + renderMarkdown(message.text) + "</div>";
+    }
+    return '<div class="message-content">' + escapeHtml(message.text) + "</div>";
   }
 
   function nowIso() {
@@ -486,7 +698,11 @@
     render();
     scrollMessagesToBottom();
     const options = DEMO_RESPONSES[roleId] || DEMO_RESPONSES.ops;
-    const text = options[Math.floor(Math.random() * options.length)];
+    const prompt = (state.messagesByRole[roleId][state.messagesByRole[roleId].length - 1] || {}).text || "";
+    const normalizedPrompt = prompt.toLowerCase();
+    const text = normalizedPrompt === "show features" || normalizedPrompt === "demo markdown"
+      ? DEMO_MARKDOWN_RESPONSE
+      : options[Math.floor(Math.random() * options.length)];
     window.setTimeout(function () {
       state.typingByRole[roleId] = false;
       pushMessage(roleId, {
@@ -689,7 +905,7 @@
           '<div class="message-avatar">' + escapeHtml(message.author === "user" ? initials() : role.emoji) + "</div>" +
           '<div class="message-body">' +
           '<div class="message-name">' + escapeHtml(authorName) + "</div>" +
-          '<div class="message-bubble">' + escapeHtml(message.text) + "</div>" +
+          '<div class="message-bubble">' + renderMessageContent(message) + "</div>" +
           '<div class="message-meta"><span>' + escapeHtml(formatTime(message.timestamp)) + "</span></div>" +
           "</div>" +
           "</article>"
